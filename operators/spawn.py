@@ -3,9 +3,9 @@ from ..models.floor import Floor
 from ..models.wall import Wall
 from ..models.wall_accessory import WallAccessory
 
-class FLOORPLAN_OT_spawn_object(bpy.types.Operator):
+class FLOORPLAN_OT_spawn(bpy.types.Operator):
     """Spawn selected object type in the scene"""
-    bl_idname = "floorplan.spawn_object"
+    bl_idname = "floorplan.spawn"
     bl_label = "Spawn Object"
     bl_options = {'REGISTER', 'UNDO'}
     
@@ -14,11 +14,11 @@ class FLOORPLAN_OT_spawn_object(bpy.types.Operator):
         object_type = context.scene.room_object_type
         
         # Create and spawn the selected object
-        if object_type == 'FLOOR':
+        if object_type == 'floor`':
             obj = Floor()
-        elif object_type == 'WALL':
+        elif object_type == 'wall':
             obj = Wall()
-        elif object_type == 'WALL_ACCESSORY':
+        elif object_type == 'wall_accessory':
             obj = WallAccessory()
             
         obj.spawn(context)
