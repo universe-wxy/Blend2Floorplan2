@@ -14,12 +14,12 @@ class FLOORPLAN_OT_spawn(bpy.types.Operator):
         object_type = context.scene.room_object_type
         
         # Create and spawn the selected object
-        if object_type == 'floor`':
-            obj = Floor()
+        if object_type == 'floor':
+            obj = Floor(context)
         elif object_type == 'wall':
-            obj = Wall()
+            obj = Wall(context)
         elif object_type == 'wall_accessory':
-            obj = WallAccessory()
-            
+            obj = WallAccessory(context)
+
         obj.spawn(context)
         return {'FINISHED'}

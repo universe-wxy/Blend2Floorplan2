@@ -1,4 +1,6 @@
 import bpy
+from math import pi
+import mathutils
 
 class Wall:
     """Base class for wall objects"""
@@ -27,12 +29,37 @@ class Wall:
     def spawn(self, context):
         print(f"Spawning wall with name: {self.name} and side: {self.side}")
 
-        if self.side == "none":
+        try:
             bpy.ops.mesh.primitive_cube_add()
             wall_obj = context.active_object
-            
-            wall_obj.location = (1.5, 0, 1.5)
-            wall_obj.scale = (1.5, 0.06, 1.5)
-            wall_obj.name = self.name
-            
+
+            for col in wall_obj.users_collection:
+                col.objects.unlink(wall_obj)
+
+
+            if self.side == "main":
+                wall_obj.rotation_euler[0] = pi / 2
+                wall_obj.name = "wall_main"
+            elif self.side == "left":
+                wall_obj.rotation_euler[0] = pi / 2
+                wall_obj.rotation_euler[2] = pi / 2
+                wall_obj.name = "wall_left"
+            elif self.side == "right":
+                wall_obj.rotation_euler[0] = pi / 2
+                wall_obj.rotation_euler[2] = -pi / 2
+                wall_obj.name = "wall_right"
+            elif self.side == "front":
+                wall_obj.rotation_euler[0] = pi / 2
+                wall_obj.rotation_euler[2] = pi
+                wall_obj.name = "wall_front"
+
+            wall_obj.location = (1.5, -1.5, 1.5)
+            wall_obj.scale = (1.5, 1.5, 0.06)
+
+            # TODO: Set offset
+
+            # wall_obj.name = self.name
             self.walls_col.objects.link(wall_obj)
+
+        except Exception as e:
+            print(f"Error spawning wall: {e}")

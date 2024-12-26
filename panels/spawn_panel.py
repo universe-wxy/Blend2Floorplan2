@@ -1,26 +1,16 @@
 import bpy
-from ..utils.constants import BL_CATEGORY, BL_PANEL_ID
+from ..utils.constants import (
+    BL_CATEGORY, 
+    BL_PANEL_ID,
+    OBJECT_TYPES,
+    WALL_SIDES
+)
 from ..operators.spawn import FLOORPLAN_OT_spawn
-
-# Define the enum items for object types
-object_types = [
-    ('floor', "Floor", "Spawn a floor object"),
-    ('wall', "Wall", "Spawn a wall object"),
-    ('wall_accessory', "Wall Accessory", "Spawn a wall accessory"),
-]
-
-# Define wall side options
-wall_sides = [
-    ('none', "none", "No specific side"),
-    ('left', "left", "Left wall"),
-    ('right', "right", "Right wall"),
-    ('main', "main", "Main wall"),
-]
 
 # Register the enum property
 def register_properties():
     bpy.types.Scene.room_object_type = bpy.props.EnumProperty(
-        items=object_types,
+        items=OBJECT_TYPES,
         name="Object Type",
         description="Select object type to spawn",
         default='floor'
@@ -28,10 +18,10 @@ def register_properties():
     
     # Add wall_side property
     bpy.types.Scene.wall_side = bpy.props.EnumProperty(
-        items=wall_sides,
+        items=WALL_SIDES,
         name="Wall Side",
         description="Select wall side",
-        default='none'
+        default='main'
     )
 
     bpy.types.Scene.wall_name = bpy.props.StringProperty(
