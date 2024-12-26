@@ -1,0 +1,1 @@
+# TODO: define a check operator to check whether the scene data is valid
