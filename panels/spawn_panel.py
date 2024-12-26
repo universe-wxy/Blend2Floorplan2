@@ -1,11 +1,9 @@
 import bpy
 from ..utils.constants import (
-    BL_CATEGORY, 
-    BL_PANEL_ID,
     OBJECT_TYPES,
     WALL_SIDES
 )
-from ..operators.spawn import FLOORPLAN_OT_spawn
+from ..operators.spawn_op import FLOORPLAN_OT_spawn
 
 # Register the enum property
 def register_properties():
@@ -32,11 +30,11 @@ def register_properties():
 
 class FLOORPLAN_PT_spawn_panel(bpy.types.Panel):
     """Panel for spawning room objects"""
-    bl_label = "Spawn Objects"
-    bl_idname = BL_PANEL_ID
+    bl_label = "Spawn"
+    bl_idname = "FLOORPLAN_PT_spawn_panel"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = BL_CATEGORY
+    bl_category = "FloorPlan"
     
     def draw(self, context):
         layout = self.layout
@@ -50,7 +48,7 @@ class FLOORPLAN_PT_spawn_panel(bpy.types.Panel):
             layout.prop(context.scene, "wall_name")
 
         # Add the spawn button
-        layout.operator("floorplan.spawn", text="spawn")
+        layout.operator(FLOORPLAN_OT_spawn.bl_idname, text="Spawn")
 
 def register_room_panel():
     register_properties()

@@ -19,4 +19,10 @@ Three panels in the Blender UI:
 
 ## TODO
 
-- [ ] Check Objects
+- [] `Spawn Objects`
+  - [x] walls, floors
+  - [ ] other fixtures
+- [ ] `Check Objects`
+- [ ] `Export YAML`
+  - [x] `export_to_json`
+  - [ ] `json_to_yaml`

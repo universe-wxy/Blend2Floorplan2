@@ -23,3 +23,10 @@ class FLOORPLAN_OT_spawn(bpy.types.Operator):
 
         obj.spawn(context)
         return {'FINISHED'}
+    
+
+def register_spawn_op():
+    bpy.utils.register_class(FLOORPLAN_OT_spawn)
+
+def unregister_spawn_op():
+    bpy.utils.unregister_class(FLOORPLAN_OT_spawn)
