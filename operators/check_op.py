@@ -12,10 +12,12 @@ class FLOORPLAN_OT_check(bpy.types.Operator):
     def execute(self, context):
         try:
             current_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-            python_script_path = os.path.join(current_dir, 'core', 'demo.py')
+            python_script_path = os.path.join(current_dir, 'core', 'check.py')
             
+            layout_path = bpy.context.scene.get('exported_yaml')
+
             process = subprocess.Popen(
-                ['conda', 'run', '-n', 'robocasa', 'python', python_script_path],
+                ['conda', 'run', '-n', 'robocasa', 'python', python_script_path, layout_path],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
             )

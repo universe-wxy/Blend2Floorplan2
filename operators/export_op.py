@@ -27,6 +27,7 @@ class FLOORPLAN_OT_convert(bpy.types.Operator):
                 return {'CANCELLED'}
                 
             yaml_file = json_to_yaml(json_file)
+            bpy.context.scene['exported_yaml'] = yaml_file
             self.report({'INFO'}, f"JSON converted to YAML: {yaml_file}")
             return {'FINISHED'}
             
