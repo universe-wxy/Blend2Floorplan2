@@ -1,5 +1,4 @@
 import json
-import yaml
 from pathlib import Path
 from ..processors import process_room_data, process_group_data
 from ..utils import custom_format
@@ -20,7 +19,6 @@ def json_to_yaml(json_file: str) -> str:
                 yaml_data[key] = process_group_data(value)
             else:
                 pass
-
         
         with open(yaml_file, 'w') as f:
             formatted_lines = custom_format(yaml_data)
