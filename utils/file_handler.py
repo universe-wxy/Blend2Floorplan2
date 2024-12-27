@@ -3,11 +3,17 @@ import os
 import json
 from typing import Any
 
+def get_default_root_path() -> str:
+    """Get default root path (parent directory of current file)"""
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    return os.path.dirname(current_dir)
+
 def get_output_dir() -> str:
     """Get output directory path"""
     blend_file_path = bpy.data.filepath
     if not blend_file_path:
-        blend_file_path = os.path.join("/home/chenyu.cao/Projects/blend2floorplan", "test_scene.blend")
+        root_path = get_default_root_path()
+        blend_file_path = os.path.join(root_path, "test_scene.blend")
         
     blend_file_dir = os.path.dirname(blend_file_path)
     blend_file_name = os.path.splitext(os.path.basename(blend_file_path))[0]
@@ -20,7 +26,8 @@ def get_output_path() -> str:
     """Generate scene info output file path"""
     blend_file_path = bpy.data.filepath
     if not blend_file_path:
-        blend_file_path = os.path.join("/home/chenyu.cao/Projects/blend2floorplan", "test_scene.blend")
+        root_path = get_default_root_path()
+        blend_file_path = os.path.join(root_path, "test_scene.blend")
     blend_file_name = os.path.splitext(os.path.basename(blend_file_path))[0]
     return os.path.join(get_output_dir(), f"{blend_file_name}.json")
 
