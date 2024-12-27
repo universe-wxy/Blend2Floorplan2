@@ -13,16 +13,17 @@ Some tips for development in IDE:
 
 Three panels in the Blender UI:
 
-- `Spawn Objects`: Spawn room objects.
-- `Check Objects`: Check the room objects (whether satisfy the correct yaml format).
-- `Export YAML`: Export the room objects to `yaml` file.
+- `Spawn`: Spawn objects and scenes.
+- `Export`: Export the room objects to `json` file, and then convert to `yaml` file.
+- `Check`: Check the yaml scene in robocasa.
 
 ## TODO
 
-- [] `Spawn Objects`
+- [ ] `Spawn Objects`
   - [x] walls, floors
   - [ ] other fixtures
 - [ ] `Check Objects`
-- [ ] `Export YAML`
+- [x] `Export YAML`
   - [x] `export_to_json`
-  - [ ] `json_to_yaml`
+  - [x] `json_to_yaml`
+- [x] Check the yaml scene in robocasa directly by `demo.py`
