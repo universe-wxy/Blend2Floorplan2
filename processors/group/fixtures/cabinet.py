@@ -1,4 +1,4 @@
-from utils import abs2rel_pos
+from ....utils import abs2rel_pos
 from .registry import register_fixture
 
 def _process_cabinet_base(value, key, group_pos, group_z_rot, cabinet_type):

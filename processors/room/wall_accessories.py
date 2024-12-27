@@ -1,4 +1,4 @@
-from utils.type_utils import get_type_from_key
+from ...utils.type_utils import get_type_from_key
 
 def process_wall_accessories(accessory_data):
     """Process wall accessories and route to specific handlers based on type"""

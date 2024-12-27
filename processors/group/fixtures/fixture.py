@@ -1,4 +1,4 @@
-from utils import abs2rel_pos, get_type_from_key
+from ....utils import abs2rel_pos, get_type_from_key
 from .registry import get_processor
 
 def process_fixture(value, key, group_pos, group_z_rot):

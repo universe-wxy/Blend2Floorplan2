@@ -1,4 +1,4 @@
-from utils import abs2rel_pos, get_type_from_key
+from ....utils import abs2rel_pos, get_type_from_key
 
 def process_object(value, key, group_pos, group_z_rot):
     object_type = get_type_from_key(key)

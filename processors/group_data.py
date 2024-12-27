@@ -1,8 +1,8 @@
 from .group.axis import process_axis
 from .group.fixtures.fixture import process_fixture
 from .group.objects.object import process_object
-from utils.constants import FIXTURES_SET, OBJECTS_SET
-from utils.type_utils import get_type_from_key
+from ..utils.constants import FIXTURES_SET, OBJECTS_SET
+from ..utils.type_utils import get_type_from_key
 
 def process_group_data(group_data):
     group_result = {}

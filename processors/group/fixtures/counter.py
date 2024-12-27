@@ -1,4 +1,4 @@
-from utils import abs2rel_pos
+from ....utils import abs2rel_pos
 from .registry import register_fixture
 
 @register_fixture('counter')
