@@ -7,6 +7,17 @@ from robocasa.models.scenes.scene_registry import get_style_path
 from robocasa.models.scenes.scene_utils import *
 from robocasa.models.fixtures import *
 
+from robosuite.models.tasks import Task
+from robosuite.models.arenas import Arena
+from robosuite.utils.mjcf_utils import xml_path_completion
+
+import robocasa
+
+import mujoco
+import mujoco.viewer
+import sys
+import select
+
 # fixture string to class
 FIXTURES = dict(
     hinge_cabinet=HingeCabinet,
@@ -281,15 +292,111 @@ def create_fixtures(layout_path, rng=None):
 
     return fixtures
 
+class KitchenArena(Arena):
+    """
+    Kitchen arena class holding all of the fixtures
+
+    Args:
+        layout_id (int or LayoutType): layout of the kitchen to load
+
+        style_id (int or StyleType): style of the kitchen to load
+
+        rng (np.random.Generator): random number generator used for initializing
+            fixture state in the KitchenArena
+    """
+
+    def __init__(self, layout_path, rng=None):
+        super().__init__(
+            xml_path_completion(
+                "arenas/empty_kitchen_arena.xml", root=robocasa.models.assets_root
+            )
+        )
+        self.fixtures = create_fixtures(
+            layout_path=layout_path
+        )
+
+    def get_fixture_cfgs(self):
+        """
+        Returns config data for all fixtures in the arena
+
+        Returns:
+            list: list of fixture configurations
+        """
+        fixture_cfgs = []
+        for (name, fxtr) in self.fixtures.items():
+            cfg = {}
+            cfg["name"] = name
+            cfg["model"] = fxtr
+            cfg["type"] = "fixture"
+            if hasattr(fxtr, "_placement"):
+                cfg["placement"] = fxtr._placement
+
+            fixture_cfgs.append(cfg)
+
+        return fixture_cfgs
+    
+def create_and_load_scene(layout_path):
+    mujoco_arena = KitchenArena(
+        layout_path=layout_path,
+    )
+
+    fixture_cfgs = mujoco_arena.get_fixture_cfgs()
+    fixtures = {cfg["name"]: cfg["model"] for cfg in fixture_cfgs}
+
+    model = Task(
+        mujoco_arena=mujoco_arena,
+        mujoco_robots=[],
+        mujoco_objects=list(fixtures.values()),
+    )
+
+    xml = model.get_xml()
+    model = mujoco.MjModel.from_xml_string(xml)
+    data = mujoco.MjData(model)
+    return model, data
+
+
+def config_cam(viewer):
+    viewer.cam.azimuth = 90
+    viewer.cam.elevation = -20
+    viewer.cam.distance = 3.0
+    viewer.cam.lookat[0:3] = [1.8, -8.0, 3.5]
+
 if __name__ == "__main__":
     import argparse
     
     # Create argument parser
     parser = argparse.ArgumentParser(description='Create fixtures from a layout YAML file')
     parser.add_argument('layout_path', type=str, help='Path to the layout YAML file')
+    parser.add_argument('--demo', action='store_true', help='Whether to run the demo')
     
     # Parse arguments
     args = parser.parse_args()
-    
-    # Create fixtures using the provided layout path
-    fixtures = create_fixtures(args.layout_path)
+
+    if args.demo:
+        # Use the layout_path from command line arguments
+        model, data = create_and_load_scene(args.layout_path)
+        renderer = mujoco.Renderer(model)
+
+        with mujoco.viewer.launch_passive(model, data) as viewer:
+            config_cam(viewer)
+            while viewer.is_running():
+                mujoco.mj_step(model, data)
+
+                if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
+                    line = sys.stdin.readline()
+                    if line.strip() == "q":
+                        viewer.close()
+                        # Use args.layout_path here as well
+                        model, data = create_and_load_scene(args.layout_path)
+                        renderer = mujoco.Renderer(model)
+                        config_cam(viewer)
+                        viewer = mujoco.viewer.launch_passive(model, data)
+
+                mujoco.mj_forward(model, data)
+                renderer.update_scene(data)
+                renderer.render()
+                viewer.sync()
+
+        viewer.close()
+    else:
+        fixtures = create_fixtures(args.layout_path)
