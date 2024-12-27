@@ -1,7 +1,7 @@
 import bpy
 from .panels.spawn_panel import register_room_panel, unregister_room_panel
 from .panels.export_panel import register_export_panel, unregister_export_panel
-
+from .panels.check_panel import register_check_panel, unregister_check_panel
 bl_info = {
     "name": "FloorPlan",
     "author": "Chenyu Cao",
@@ -17,10 +17,11 @@ bl_info = {
 def register():
     register_room_panel()
     register_export_panel()
+    register_check_panel()
 
 def unregister():
     unregister_room_panel()
     unregister_export_panel()
-
+    unregister_check_panel()
 if __name__ == "__main__":
     register()

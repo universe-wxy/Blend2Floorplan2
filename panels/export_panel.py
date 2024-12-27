@@ -10,12 +10,11 @@ class FLOORPLAN_PT_export_panel(bpy.types.Panel):
     bl_category = "FloorPlan"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    # bl_options = {'DEFAULT_CLOSED'}
     
     def draw(self, context):
         layout = self.layout
-        layout.operator(FLOORPLAN_OT_export.bl_idname, text="export_to_json")
-        layout.operator(FLOORPLAN_OT_convert.bl_idname, text="json_to_yaml")
+        layout.operator(FLOORPLAN_OT_export.bl_idname, text="Export to Json")
+        layout.operator(FLOORPLAN_OT_convert.bl_idname, text="Json to Yaml")
 
 def register_export_panel():
     bpy.utils.register_class(FLOORPLAN_OT_export)

@@ -29,6 +29,9 @@ def export_scene_to_json() -> str:
     try:
         scene_data = traverse_collection(bpy.context.scene.collection)
         output_file = save_scene_data(scene_data)
+        
+        bpy.context.scene['exported_json'] = output_file
+        
         print(f"Scene data exported to {output_file}")
         return output_file
         

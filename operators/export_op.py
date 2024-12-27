@@ -1,5 +1,6 @@
 import bpy
 from ..core.export import export_scene_to_json
+from ..core.convert import json_to_yaml
 
 class FLOORPLAN_OT_export(bpy.types.Operator):
     """Export the scene to a JSON file"""
@@ -19,9 +20,19 @@ class FLOORPLAN_OT_convert(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
     
     def execute(self, context):
-        # TODO: Implement the conversion logic
-        self.report({'INFO'}, "JSON to YAML conversion completed")
-        return {'FINISHED'}
+        try:
+            json_file = context.scene.get('exported_json')
+            if not json_file:
+                self.report({'ERROR'}, "Please export to JSON first")
+                return {'CANCELLED'}
+                
+            yaml_file = json_to_yaml(json_file)
+            self.report({'INFO'}, f"JSON converted to YAML: {yaml_file}")
+            return {'FINISHED'}
+            
+        except Exception as e:
+            self.report({'ERROR'}, f"Error converting file: {str(e)}")
+            return {'CANCELLED'}
 
 def register_export_op():
     bpy.utils.register_class(FLOORPLAN_OT_export)

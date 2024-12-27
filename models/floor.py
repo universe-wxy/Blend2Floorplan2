@@ -39,4 +39,3 @@ class Floor:
             self.floors_col.objects.link(floor_obj)
         except Exception as e:
             print(f"Error spawning floor: {e}")
-
