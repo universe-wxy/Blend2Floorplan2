@@ -15,4 +15,18 @@ def process_stove(value, key, group_pos, group_z_rot):
     Returns:
         Generator yielding stove informationq
     """
-    pass
+    pos = abs2rel_pos(
+        group_pos,
+        group_z_rot,
+        value.get('location', [0, 0, 0])
+    )
+    size = value.get('size')
+
+    stove_info = {
+        'name': key,
+        'type': 'stove',
+        'pos': pos,
+        'size': size
+    }
+
+    yield stove_info

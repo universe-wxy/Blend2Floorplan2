@@ -113,3 +113,24 @@ def process_cube(value, key, group_pos, group_z_rot):
     }
 
     yield cube_info
+
+@register_fixture('cab_corner')
+def process_cab_corner(value, key, group_pos, group_z_rot):
+    """custom fixture: cab_corner"""
+
+    pos = abs2rel_pos(
+        group_pos,
+        group_z_rot,
+        value.get('location', [0, 0, 0])
+    )
+
+    size = value.get('size')
+
+    cab_corner_info = {
+        'name': f"{key}_cab_corner",
+        'type': 'box',
+        'size': size,
+        'pos': pos
+    }
+
+    yield cab_corner_info

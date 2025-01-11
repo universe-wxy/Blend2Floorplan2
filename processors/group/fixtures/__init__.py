@@ -15,7 +15,10 @@ from .fridge import process_fridge
 from .microwave import process_microwave
 from .window import process_framed_window
 from .sink import process_sink
+from .stool import process_stool
+from .stove import process_stove
 from .custom import process_qianrugui, process_pillar, process_cube
+
 
 __all__ = [
     'process_cabinet',
@@ -35,6 +38,10 @@ __all__ = [
     'process_sink',
     'process_qianrugui',
     'process_pillar',
-    'process_cube'
+    'process_cab_corner',
+    'process_cube',
+    'process_stool',
+    'process_stove'
 ]
+
 
