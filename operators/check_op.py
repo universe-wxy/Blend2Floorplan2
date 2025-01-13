@@ -1,4 +1,4 @@
-# TODO: define a check operator to check whether the scene data is valid
+# TODO: test the check operator on windows
 import bpy
 import subprocess  # Import subprocess to run system commands
 import os
