@@ -1,4 +1,4 @@
-# TODO: test the check operator on windows
+# TODO: test the check operator on windows 11
 import bpy
 import subprocess  # Import subprocess to run system commands
 import os
