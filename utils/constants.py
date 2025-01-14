@@ -34,15 +34,18 @@ FIXTURES_SET = {
     'dishwasher',
     'coffeemachine',
     'framedwindow',
+    'stool',
+    'box',
 
     # custom
-    'qianrugui',
+    "qianrugui",
     "pillar",
-    "cube"
+    "cube",
+    "panelbox",
+    "cabcorner"
 }
 
 OBJECTS_SET = {
-    'stool',
     'banana',
     'apple',
 }

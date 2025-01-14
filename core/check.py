@@ -110,7 +110,7 @@ def create_fixtures(layout_path, rng=None):
     except:
         pass
 
-    style_path = get_style_path(style_id=0)
+    style_path = get_style_path(style_id=6)
 
     # load style
     with open(style_path, "r") as f:

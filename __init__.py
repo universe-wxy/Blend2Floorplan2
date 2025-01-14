@@ -3,7 +3,7 @@ from .panels.spawn_panel import register_room_panel, unregister_room_panel
 from .panels.export_panel import register_export_panel, unregister_export_panel
 from .panels.check_panel import register_check_panel, unregister_check_panel
 bl_info = {
-    "name": "FloorPlan",
+    "name": "blend2floorplan",
     "author": "Chenyu Cao",
     "version": (1, 0),
     "blender": (2, 80, 0),

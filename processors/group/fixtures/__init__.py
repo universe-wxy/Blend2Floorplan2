@@ -17,8 +17,14 @@ from .window import process_framed_window
 from .sink import process_sink
 from .stool import process_stool
 from .stove import process_stove
-from .custom import process_qianrugui, process_pillar, process_cube
-
+from .custom import (
+    process_qianrugui, 
+    process_pillar, 
+    process_cube,
+    process_cab_corner,
+    process_panel_box
+)
+from .box import process_box
 
 __all__ = [
     'process_cabinet',
@@ -41,7 +47,10 @@ __all__ = [
     'process_cab_corner',
     'process_cube',
     'process_stool',
-    'process_stove'
+    'process_stove',
+    'process_panel_box',
+    'process_box'
 ]
+
 
 

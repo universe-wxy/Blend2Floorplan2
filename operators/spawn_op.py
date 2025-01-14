@@ -1,7 +1,7 @@
 import bpy
-from ..models.floor import Floor
-from ..models.wall import Wall
-from ..models.wall_accessory import WallAccessory
+from ..spawners.floor import Floor
+from ..spawners.wall import Wall
+from ..spawners.wall_accessory import WallAccessory
 
 class FLOORPLAN_OT_spawn(bpy.types.Operator):
     """Spawn selected object type in the scene"""

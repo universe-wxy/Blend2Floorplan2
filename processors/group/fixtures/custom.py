@@ -11,25 +11,27 @@ def process_qianrugui(value, key, group_pos, group_z_rot):
         value.get('location', [0, 0, 0])
     )
 
+    size = value.get('size')
+
     bottom_info = {
         'name': f"{key}_bottom",
         'type': 'stack',
-        'levels': ["drawer", "drawer"],
-        'percentages': [0.5, 0.5],
-        'pos': [pos[0], pos[1], 0.35],
-        'size': [0.8, 0.6, 0.6]
+        'levels': ["drawer"],
+        'percentages': [1],
+        'pos': [pos[0], pos[1], 0.15],
+        'size': [size[0], size[1], 0.3]
     }
 
     oven_info = {
         'name': f"{key}_oven",
         'type': 'oven',
-        'size': [0.75, 0.60, 0.68]
+        'size': [size[0] - 0.1, size[1], 0.68]
     }
 
     oven_housing_info = {
         'name': f"{key}_oven_housing",
         'type': 'housing_cabinet',
-        'size': [0.8, 0.6, 0.7],
+        'size': [size[0], size[1], 0.7],
         'padding': '[null, [-0.01, null], null]',
         'align_to': f"{key}_bottom",
         'alignment': 'front',
@@ -40,13 +42,13 @@ def process_qianrugui(value, key, group_pos, group_z_rot):
     microwave_info = {
         'name': f"{key}_microwave",
         'type': 'microwave',
-        'size': [0.75, 0.50, None]
+        'size': [size[0] - 0.1, size[1], None]
     }
 
     microwave_housing_info = {
         'name': f"{key}_microwave_housing",
         'type': 'housing_cabinet',
-        'size': [0.8, 0.6, 0.55],
+        'size': [size[0], size[1], 0.55],
         'padding': '[null, [-0.01, null], null]',
         'align_to': f"{key}_oven_housing",
         'alignment': 'front',
@@ -57,11 +59,11 @@ def process_qianrugui(value, key, group_pos, group_z_rot):
     top_info = {
         'name': f"{key}_top",
         'type': 'hinge_cabinet',
-        'size': [0.8, 0.6, None],
+        'size': [size[0], size[1], None],
         'align_to': f"{key}_microwave_housing",
         'alignment': 'front',
         'side': 'top',
-        'stack_height': 2.55,
+        'stack_height': size[2],
         'stack_fixtures': [f"{key}_bottom", f"{key}_oven_housing", f"{key}_microwave_housing"]
     }
 
@@ -114,7 +116,7 @@ def process_cube(value, key, group_pos, group_z_rot):
 
     yield cube_info
 
-@register_fixture('cab_corner')
+@register_fixture('cabcorner')
 def process_cab_corner(value, key, group_pos, group_z_rot):
     """custom fixture: cab_corner"""
 
@@ -134,3 +136,40 @@ def process_cab_corner(value, key, group_pos, group_z_rot):
     }
 
     yield cab_corner_info
+
+@register_fixture('panelbox')
+def process_panel_box(value, key, group_pos, group_z_rot):
+    """custom fixture: panel_box"""
+
+    pos = abs2rel_pos(
+        group_pos,
+        group_z_rot,
+        value.get('location', [0, 0, 0])
+    )
+
+    size = value.get('size')
+
+    panel_box_info = {
+        'name': f"{key}_panel_box",
+        'type': 'stack',
+        'size': size,
+        'pos': pos,
+        'levels': ["panel_cabinet"],
+        'percentages': [1],
+        'configs': {
+            'panel_cabinet': {
+                'solid_body': True,
+                'panel_type': "slab"
+            }
+        }
+    }
+
+    # levels: [panel_cabinet]
+    #   percentages: [1]
+
+    #   configs:
+    #     panel_cabinet:
+    #       solid_body: true
+    #       panel_type: "slab"
+
+    yield panel_box_info

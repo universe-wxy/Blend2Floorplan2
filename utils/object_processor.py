@@ -47,9 +47,15 @@ def get_object_data(obj: bpy.types.Object, parent_name: str) -> Dict[str, Any]:
             percentages = obj.data.get("percentages", "none")
             
             if levels != "none":
-                levels = json.loads(levels)
+                try:
+                    levels = json.loads(levels)
+                except:
+                    import pdb; pdb.set_trace()
             if percentages != "none":
-                percentages = json.loads(percentages)
+                try:
+                    percentages = json.loads(percentages)
+                except json.JSONDecodeError:
+                    percentages = []
                 
             obj_data["levels"] = levels
             obj_data["percentages"] = percentages
