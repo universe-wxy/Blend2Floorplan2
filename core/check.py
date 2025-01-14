@@ -371,6 +371,7 @@ if __name__ == "__main__":
     
     # Parse arguments
     args = parser.parse_args()
+    # print('***************ltr_debug**************')
 
     if args.demo:
         # Use the layout_path from command line arguments
@@ -400,3 +401,4 @@ if __name__ == "__main__":
         viewer.close()
     else:
         fixtures = create_fixtures(args.layout_path)
+

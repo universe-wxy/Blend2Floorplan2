@@ -1,4 +1,4 @@
-# TODO: test the check operator on windows 11 ****
+# TODO: define a check operator to check whether the scene data is valid
 import bpy
 import subprocess  # Import subprocess to run system commands
 import os
@@ -7,13 +7,22 @@ class FLOORPLAN_OT_check(bpy.types.Operator):
     """Check the scene data"""
     bl_idname = "floorplan.check"
     bl_label = "Check"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
+
+    output: bpy.props.StringProperty(default="")
+
+    def draw_popup(self, menu, context):
+        layout = menu.layout
+        if self.output:
+            layout.label(text="Output:")
+            for line in self.output.split('\n'):
+                layout.label(text=line)
 
     def execute(self, context):
         try:
             current_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
             python_script_path = os.path.join(current_dir, 'core', 'check.py')
-
+            
             layout_path = bpy.context.scene.get('exported_yaml')
 
             # Get conda executable path based on OS
@@ -26,23 +35,27 @@ class FLOORPLAN_OT_check(bpy.types.Operator):
             process = subprocess.Popen(
                 [conda_path, 'run', '-n', 'robocasa', 'python', python_script_path, layout_path],
                 stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
+                stderr=subprocess.PIPE,
+                universal_newlines=True
             )
 
             stdout, stderr = process.communicate()
-
+            
+            self.output = stdout if stdout else stderr
+            
             if process.returncode == 0:
                 self.report({'INFO'}, "Demo script executed successfully")
+                bpy.context.window_manager.popup_menu(self.draw_popup, title="Script Output", icon='INFO')
             else:
-                self.report({'ERROR'}, f"Demo script failed: {stderr.decode()}")
+                self.report({'ERROR'}, f"Demo script failed: {stderr}")
                 return {'CANCELLED'}
-
+                
         except Exception as e:
             self.report({'ERROR'}, f"Failed to execute demo script: {str(e)}")
             return {'CANCELLED'}
-
+            
         return {'FINISHED'}
-
+    
 class FLOORPLAN_OT_demo(bpy.types.Operator):
     """Check the scene data"""
     bl_idname = "floorplan.demo"
@@ -53,7 +66,7 @@ class FLOORPLAN_OT_demo(bpy.types.Operator):
         try:
             current_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
             python_script_path = os.path.join(current_dir, 'core', 'check.py')
-
+            
             layout_path = bpy.context.scene.get('exported_yaml')
 
             if os.name == 'nt':  # Windows
@@ -68,15 +81,17 @@ class FLOORPLAN_OT_demo(bpy.types.Operator):
             )
 
             stdout, stderr = process.communicate()
-
+            
             if process.returncode == 0:
                 self.report({'INFO'}, "Demo script executed successfully")
             else:
                 self.report({'ERROR'}, f"Demo script failed: {stderr.decode()}")
                 return {'CANCELLED'}
-
+                
         except Exception as e:
             self.report({'ERROR'}, f"Failed to execute demo script: {str(e)}")
             return {'CANCELLED'}
-
+            
         return {'FINISHED'}
+
+
