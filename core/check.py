@@ -383,15 +383,15 @@ if __name__ == "__main__":
             while viewer.is_running():
                 mujoco.mj_step(model, data)
 
-                if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
-                    line = sys.stdin.readline()
-                    if line.strip() == "q":
-                        viewer.close()
-                        # Use args.layout_path here as well
-                        model, data = create_and_load_scene(args.layout_path)
-                        renderer = mujoco.Renderer(model)
-                        config_cam(viewer)
-                        viewer = mujoco.viewer.launch_passive(model, data)
+                # if sys.stdin in select.select([sys.stdin], [], [], 0)[0]: turned off, or can't be used on windows
+                line = sys.stdin.readline()
+                if line.strip() == "q":
+                    viewer.close()
+                    # Use args.layout_path here as well
+                    model, data = create_and_load_scene(args.layout_path)
+                    renderer = mujoco.Renderer(model)
+                    config_cam(viewer)
+                    viewer = mujoco.viewer.launch_passive(model, data)
 
                 mujoco.mj_forward(model, data)
                 renderer.update_scene(data)
