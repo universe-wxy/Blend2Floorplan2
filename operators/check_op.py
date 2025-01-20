@@ -33,7 +33,7 @@ class FLOORPLAN_OT_check(bpy.types.Operator):
                 self.report({'ERROR'}, "请先导出YAML文件")
                 return {'CANCELLED'}
               
-            style_id = str(context.scene.check_style_id)  # 使用check_style_id而不是style_id
+            style_id = int(context.scene.check_style_id)
 
             # 获取conda路径
             conda_path = find_conda_path()
@@ -84,7 +84,7 @@ class FLOORPLAN_OT_demo(bpy.types.Operator):
             python_script_path = os.path.join(current_dir, 'core', 'check.py')
             
             layout_path = bpy.context.scene.get('exported_yaml')
-            style_id = str(context.scene.check_style_id)  # 使用check_style_id而不是style_id
+            style_id = int(context.scene.check_style_id)
 
             # 获取conda路径
             conda_path = find_conda_path()
@@ -92,6 +92,7 @@ class FLOORPLAN_OT_demo(bpy.types.Operator):
                 self.report({'ERROR'}, "未找到Conda路径，请确保Conda已安装")
                 return {'CANCELLED'}
 
+            import pdb; pdb.set_trace()
             process = subprocess.Popen(
                 [conda_path, 'run', '-n', 'robocasa', 'python', python_script_path, layout_path, '--demo', '--style_id', style_id],  # 添加style_id参数
                 stdout=subprocess.PIPE,

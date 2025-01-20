@@ -2,7 +2,6 @@ import bpy
 from typing import Dict, Any
 from ..utils.object_processor import get_object_data, get_axis_data
 from ..utils.file_handler import save_scene_data
-from ..utils.style_handler import get_style_path
 
 def traverse_collection(collection: bpy.types.Collection, parent_name: str = "") -> Dict[str, Any]:
     """Recursively traverse collection"""
@@ -40,6 +39,3 @@ def export_scene_to_json() -> str:
         print(f"Error during export: {str(e)}")
         raise
 
-def export_layout(args):
-    # 修改获取style_path的部分
-    style_path = get_style_path(style_id=args.style_id)

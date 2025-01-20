@@ -3,13 +3,11 @@ import yaml
 from robosuite.utils.mjcf_utils import array_to_string as a2s
 from robosuite.utils.mjcf_utils import string_to_array as s2a
 
-# from robocasa.models.scenes.scene_registry import get_style_path
+from robocasa.models.scenes.scene_registry import get_style_path
 from robocasa.models.scenes.scene_utils import *
 from robocasa.models.fixtures import *
 from robocasa.models.fixtures.counter import Counter
 from robocasa.models.fixtures.stove import Stove
-
-from blend2floorplan.utils.style_handler import get_style_path
 
 from robosuite.models.tasks import Task
 from robosuite.models.arenas import Arena
