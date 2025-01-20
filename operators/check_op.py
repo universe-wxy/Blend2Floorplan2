@@ -1,6 +1,7 @@
 import bpy
 import subprocess
 import os
+import platform  # 添加platform模块
 
 def find_conda_path():
     """Try to find the conda executable in common locations."""
@@ -31,6 +32,8 @@ class FLOORPLAN_OT_check(bpy.types.Operator):
             if not layout_path:
                 self.report({'ERROR'}, "请先导出YAML文件")
                 return {'CANCELLED'}
+              
+            style_id = str(context.scene.check_style_id)  # 使用check_style_id而不是style_id
 
             # 获取conda路径
             conda_path = find_conda_path()
@@ -40,7 +43,7 @@ class FLOORPLAN_OT_check(bpy.types.Operator):
 
             # 运行检查命令
             process = subprocess.Popen(
-                [conda_path, 'run', '-n', 'robocasa', 'python', python_script_path, layout_path, '--check'],
+                [conda_path, 'run', '-n', 'robocasa', 'python', python_script_path, layout_path, '--check', '--style_id', style_id], # 添加style_id参数
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 universal_newlines=True
@@ -81,6 +84,7 @@ class FLOORPLAN_OT_demo(bpy.types.Operator):
             python_script_path = os.path.join(current_dir, 'core', 'check.py')
             
             layout_path = bpy.context.scene.get('exported_yaml')
+            style_id = str(context.scene.check_style_id)  # 使用check_style_id而不是style_id
 
             # 获取conda路径
             conda_path = find_conda_path()
@@ -89,7 +93,7 @@ class FLOORPLAN_OT_demo(bpy.types.Operator):
                 return {'CANCELLED'}
 
             process = subprocess.Popen(
-                [conda_path, 'run', '-n', 'robocasa', 'python', python_script_path, layout_path, '--demo'],
+                [conda_path, 'run', '-n', 'robocasa', 'python', python_script_path, layout_path, '--demo', '--style_id', style_id],  # 添加style_id参数
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
             )
@@ -105,5 +109,5 @@ class FLOORPLAN_OT_demo(bpy.types.Operator):
         except Exception as e:
             self.report({'ERROR'}, f"Failed to execute demo script: {str(e)}")
             return {'CANCELLED'}
-            
+
         return {'FINISHED'}
