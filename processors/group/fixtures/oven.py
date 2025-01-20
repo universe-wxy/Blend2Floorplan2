@@ -34,7 +34,8 @@ def process_oven(value, key, group_pos, group_z_rot):
             group_z_rot,
             value.get('location', [0, 0, 0])
         ),
-        'size': value.get('size')
+        'size': value.get('size'),
+        "interior_obj": key
     }
 
     yield oven_info

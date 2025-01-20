@@ -43,7 +43,7 @@ def process_walls(wall_data):
             'name': f"{wall_name}_backing",
             'type': 'wall',
             'backing': True,
-            'backing_extended': [True, True],
+            # 'backing_extended': [True, True],
             'size': size + [0.1],
             'pos': pos.copy()
         }

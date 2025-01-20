@@ -13,7 +13,7 @@ def process_stove(value, key, group_pos, group_z_rot):
         group_z_rot: Group rotation around Z axis
         
     Returns:
-        Generator yielding stove informationq
+        Generator yielding stove information
     """
     pos = abs2rel_pos(
         group_pos,
