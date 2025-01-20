@@ -3,19 +3,84 @@ import subprocess
 import os
 import platform  # 添加platform模块
 
+# def find_conda_path():
+#     """Try to find the conda executable in common locations."""
+#     conda_paths = [
+#         os.path.expanduser("~/miniconda3/bin/conda"),  # Linux/MacOS Miniconda
+#         os.path.expanduser("~/anaconda3/bin/conda"),   # Linux/MacOS Anaconda
+#         os.path.expanduser(r"~/miniconda3/Scripts/conda.exe"),  # Windows Miniconda
+#         os.path.expanduser(r"~/anaconda3/Scripts/conda.exe"),   # Windows Anaconda
+#     ]
+    
+#     for path in conda_paths:
+#         if os.path.exists(path):
+#             return path
+#     return None
+
+
 def find_conda_path():
     """Try to find the conda executable in common locations."""
-    conda_paths = [
-        os.path.expanduser("~/miniconda3/bin/conda"),  # Linux/MacOS Miniconda
-        os.path.expanduser("~/anaconda3/bin/conda"),   # Linux/MacOS Anaconda
-        os.path.expanduser(r"~/miniconda3/Scripts/conda.exe"),  # Windows Miniconda
-        os.path.expanduser(r"~/anaconda3/Scripts/conda.exe"),   # Windows Anaconda
-    ]
+    if platform.system() == "Darwin":  # macOS
+        conda_paths = [
+            "/opt/homebrew/anaconda3/bin/conda",
+            "/usr/local/anaconda3/bin/conda",
+            "/opt/anaconda3/bin/conda",
+            os.path.expanduser("~/anaconda3/bin/conda"),
+            os.path.expanduser("~/opt/anaconda3/bin/conda"),
+            "/opt/homebrew/miniconda3/bin/conda",
+            "/usr/local/miniconda3/bin/conda",
+            os.path.expanduser("~/miniconda3/bin/conda"),
+        ]
+    elif platform.system() == "Windows":
+        conda_paths = [
+            r"C:\ProgramData\Anaconda3\Scripts\conda.exe",
+            r"C:\ProgramData\miniconda3\Scripts\conda.exe",
+            os.path.expanduser(r"~\Anaconda3\Scripts\conda.exe"),
+            os.path.expanduser(r"~\miniconda3\Scripts\conda.exe"),
+        ]
+    else:  # Linux
+        conda_paths = [
+            "/usr/bin/conda",
+            "/usr/local/bin/conda",
+            os.path.expanduser("~/anaconda3/bin/conda"),
+            os.path.expanduser("~/miniconda3/bin/conda"),
+        ]
+    
+    # 尝试从环境变量中获取conda路径
+    if "CONDA_EXE" in os.environ:
+        conda_paths.insert(0, os.environ["CONDA_EXE"])
+    
+    # 尝试从which命令获取conda路径（仅在Unix系统）
+    if platform.system() != "Windows":
+        try:
+            conda_path = subprocess.check_output(["which", "conda"]).decode().strip()
+            conda_paths.insert(0, conda_path)
+        except:
+            pass
     
     for path in conda_paths:
         if os.path.exists(path):
             return path
+            
+    # 如果找不到conda，尝试从PATH中查找
+    try:
+        if platform.system() == "Windows":
+            conda_path = subprocess.check_output(["where", "conda"], shell=True).decode().strip().split('\n')[0]
+        else:
+            conda_path = subprocess.check_output(["which", "conda"]).decode().strip()
+        if os.path.exists(conda_path):
+            return conda_path
+    except:
+        pass
+    
     return None
+
+def get_python_interpreter():
+    """根据操作系统返回合适的Python解释器"""
+    if platform.system() == "Darwin":  # macOS
+        return "mjpython"
+    else:  # Windows 和 Linux
+        return "python"
 
 class FLOORPLAN_OT_check(bpy.types.Operator):
     """Check the scene data"""
@@ -38,12 +103,16 @@ class FLOORPLAN_OT_check(bpy.types.Operator):
             # 获取conda路径
             conda_path = find_conda_path()
             if not conda_path:
-                self.report({'ERROR'}, "未找到Conda路径，请确保Conda已安装")
+                self.report({'ERROR'}, "未找到Conda路径, 请确保Conda已安装")
                 return {'CANCELLED'}
+
+            # 获取Python解释器
+            python_interpreter = get_python_interpreter()
 
             # 运行检查命令
             process = subprocess.Popen(
-                [conda_path, 'run', '-n', 'robocasa', 'python', python_script_path, layout_path, '--check', '--style_id', style_id], # 添加style_id参数
+                [conda_path, 'run', '-n', 'robocasa', python_interpreter, python_script_path, 
+                 layout_path, '--check', '--style_id', str(style_id)],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 universal_newlines=True
@@ -92,9 +161,12 @@ class FLOORPLAN_OT_demo(bpy.types.Operator):
                 self.report({'ERROR'}, "未找到Conda路径，请确保Conda已安装")
                 return {'CANCELLED'}
 
-            import pdb; pdb.set_trace()
+            # 获取Python解释器
+            python_interpreter = get_python_interpreter()
+
             process = subprocess.Popen(
-                [conda_path, 'run', '-n', 'robocasa', 'python', python_script_path, layout_path, '--demo', '--style_id', style_id],  # 添加style_id参数
+                [conda_path, 'run', '-n', 'robocasa', python_interpreter, python_script_path, 
+                 layout_path, '--demo', '--style_id', str(style_id)],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
             )

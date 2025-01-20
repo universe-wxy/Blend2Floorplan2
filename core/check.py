@@ -107,12 +107,25 @@ def check_syntax(fixture):
 
 
 def create_fixtures(args, rng=None):
+    """
+    Create fixtures from layout file
+    """
+    
+    # 如果args是字符串，说明是直接传入的layout_path
+    if isinstance(args, str):
+        from argparse import Namespace
+        layout_path = args
+        args = Namespace()
+        args.layout_path = layout_path
+        args.style_id = 6  # 设置默认style_id
+    
     try:
-        style = int(style)
+        style_id = int(args.style_id)  # 确保style_id是整数
     except:
-        pass
-
-    style_path = get_style_path(style_id=args.style_id)
+        style_id = 6  # 如果转换失败，使用默认值
+        
+    # 确保传入的是整数类型的style_id
+    style_path = get_style_path(style_id=int(style_id))  # 明确转换为int类型
 
     # load style
     with open(style_path, "r") as f:
@@ -313,9 +326,21 @@ class KitchenArena(Arena):
                 "arenas/empty_kitchen_arena.xml", root=robocasa.models.assets_root
             )
         )
-        self.fixtures = create_fixtures(
-            layout_path=layout_path
-        )
+
+         # 如果传入的是args对象，获取layout_path
+        if hasattr(args, 'layout_path'):
+            self.fixtures = create_fixtures(args, rng=rng)
+        else:
+            # 如果是字符串，创建一个args对象
+            from argparse import Namespace
+            layout_args = Namespace()
+            layout_args.layout_path = args
+            layout_args.style_id = 6  # 设置默认style_id
+            self.fixtures = create_fixtures(layout_args, rng=rng)
+            
+        # self.fixtures = create_fixtures(
+        #     layout_path=layout_path
+        # )
 
     def get_fixture_cfgs(self):
         """
@@ -337,10 +362,15 @@ class KitchenArena(Arena):
 
         return fixture_cfgs
     
-def create_and_load_scene(layout_path):
-    mujoco_arena = KitchenArena(
-        layout_path=layout_path,
-    )
+def create_and_load_scene(args):
+    """
+    Create and load the scene from layout file
+    
+    Args:
+        args: ArgumentParser解析的参数对象，包含layout_path和style_id
+    """
+    mujoco_arena = KitchenArena(args)
+    
 
     fixture_cfgs = mujoco_arena.get_fixture_cfgs()
     fixtures = {cfg["name"]: cfg["model"] for cfg in fixture_cfgs}
@@ -468,27 +498,25 @@ def check_kitchen(fixtures):
 if __name__ == "__main__":
     import argparse
     
-    # 修改参数解析器
     parser = argparse.ArgumentParser(description='Create fixtures from a layout YAML file')
     parser.add_argument('layout_path', type=str, help='Path to the layout YAML file')
     parser.add_argument('--demo', action='store_true', help='Whether to run the demo')
     parser.add_argument('--style_id', type=int, default=6, help='Style ID to use for layout generation')
     parser.add_argument('--check', action='store_true', help='Run kitchen layout checks')
     
+    args = parser.parse_args()
+    
     try:
-        args = parser.parse_args()
-        fixtures = create_fixtures(args.layout_path)
+        fixtures = create_fixtures(args)
         
-        # 如果指定了check参数，运行检查
         if args.check:
             passed, issues = check_kitchen(fixtures)
             if not passed:
                 for issue in issues:
                     print(f"检测到问题: {issue}")
             
-        # 如果指定了demo参数，运行demo
         if args.demo:
-            model, data = create_and_load_scene(args.layout_path)
+            model, data = create_and_load_scene(args)
             renderer = mujoco.Renderer(model)
 
             with mujoco.viewer.launch_passive(model, data) as viewer:
@@ -499,7 +527,7 @@ if __name__ == "__main__":
                     line = sys.stdin.readline()
                     if line.strip() == "q":
                         viewer.close()
-                        model, data = create_and_load_scene(args.layout_path)
+                        model, data = create_and_load_scene(args)
                         renderer = mujoco.Renderer(model)
                         config_cam(viewer)
                         viewer = mujoco.viewer.launch_passive(model, data)
@@ -514,6 +542,7 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Error: {str(e)}")
         parser.print_help()
-        viewer.close()
+        if viewer is not None:  # 只在viewer存在时才关闭
+            viewer.close()
     else:
         fixtures = create_fixtures(args)
