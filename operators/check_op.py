@@ -1,14 +1,27 @@
-# TODO: define a check operator to check whether the scene data is valid
 import bpy
-import subprocess  # Import subprocess to run system commands
+import subprocess
 import os
 import platform  # 添加platform模块
+
+def find_conda_path():
+    """Try to find the conda executable in common locations."""
+    conda_paths = [
+        os.path.expanduser("~/miniconda3/bin/conda"),  # Linux/MacOS Miniconda
+        os.path.expanduser("~/anaconda3/bin/conda"),   # Linux/MacOS Anaconda
+        os.path.expanduser(r"~/miniconda3/Scripts/conda.exe"),  # Windows Miniconda
+        os.path.expanduser(r"~/anaconda3/Scripts/conda.exe"),   # Windows Anaconda
+    ]
+    
+    for path in conda_paths:
+        if os.path.exists(path):
+            return path
+    return None
 
 class FLOORPLAN_OT_check(bpy.types.Operator):
     """Check the scene data"""
     bl_idname = "floorplan.check"
     bl_label = "Check"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     def execute(self, context):
         try:
@@ -16,30 +29,48 @@ class FLOORPLAN_OT_check(bpy.types.Operator):
             python_script_path = os.path.join(current_dir, 'core', 'check.py')
             
             layout_path = bpy.context.scene.get('exported_yaml')
+            if not layout_path:
+                self.report({'ERROR'}, "请先导出YAML文件")
+                return {'CANCELLED'}
+              
             style_id = str(context.scene.check_style_id)  # 使用check_style_id而不是style_id
 
-            # 根据操作系统选择Python解释器
-            python_interpreter = 'mjpython' if platform.system() == 'Darwin' else 'python'
-            
+            # 获取conda路径
+            conda_path = find_conda_path()
+            if not conda_path:
+                self.report({'ERROR'}, "未找到Conda路径，请确保Conda已安装")
+                return {'CANCELLED'}
+
+            # 运行检查命令
             process = subprocess.Popen(
-                ['conda', 'run', '-n', 'robocasa', python_interpreter, python_script_path, layout_path, '--style_id', style_id],  # 添加style_id参数
+                [conda_path, 'run', '-n', 'robocasa', 'python', python_script_path, layout_path, '--check', '--style_id', style_id], # 添加style_id参数
                 stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
+                stderr=subprocess.PIPE,
+                universal_newlines=True
             )
 
             stdout, stderr = process.communicate()
             
-            if process.returncode == 0:
-                self.report({'INFO'}, "Demo script executed successfully")
+            # 解析输出
+            if "检测到问题" in stdout:
+                # 找出所有检测到的问题
+                issues = [line for line in stdout.split('\n') if "检测到问题" in line]
+                # 在Blender界面显示问题
+                def draw(self, context):
+                    layout = self.layout
+                    for issue in issues:
+                        layout.label(text=issue)
+                
+                bpy.context.window_manager.popup_menu(draw, title="检查结果", icon='ERROR')
+                self.report({'WARNING'}, "发现问题，请查看详细信息")
             else:
-                self.report({'ERROR'}, f"Demo script failed: {stderr.decode()}")
-                return {'CANCELLED'}
+                self.report({'INFO'}, "检查通过，未发现问题")
+            
+            return {'FINISHED'}
                 
         except Exception as e:
-            self.report({'ERROR'}, f"Failed to execute demo script: {str(e)}")
+            self.report({'ERROR'}, f"检查失败: {str(e)}")
             return {'CANCELLED'}
-            
-        return {'FINISHED'}
     
 class FLOORPLAN_OT_demo(bpy.types.Operator):
     """Check the scene data"""
@@ -55,11 +86,14 @@ class FLOORPLAN_OT_demo(bpy.types.Operator):
             layout_path = bpy.context.scene.get('exported_yaml')
             style_id = str(context.scene.check_style_id)  # 使用check_style_id而不是style_id
 
-            # 根据操作系统选择Python解释器
-            python_interpreter = 'mjpython' if platform.system() == 'Darwin' else 'python'
-            
+            # 获取conda路径
+            conda_path = find_conda_path()
+            if not conda_path:
+                self.report({'ERROR'}, "未找到Conda路径，请确保Conda已安装")
+                return {'CANCELLED'}
+
             process = subprocess.Popen(
-                ['conda', 'run', '-n', 'robocasa', python_interpreter, python_script_path, layout_path, '--demo', '--style_id', style_id],  # 添加style_id参数
+                [conda_path, 'run', '-n', 'robocasa', 'python', python_script_path, layout_path, '--demo', '--style_id', style_id],  # 添加style_id参数
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
             )
@@ -75,8 +109,5 @@ class FLOORPLAN_OT_demo(bpy.types.Operator):
         except Exception as e:
             self.report({'ERROR'}, f"Failed to execute demo script: {str(e)}")
             return {'CANCELLED'}
-            
+
         return {'FINISHED'}
-
-
-

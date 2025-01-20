@@ -6,6 +6,8 @@ from robosuite.utils.mjcf_utils import string_to_array as s2a
 # from robocasa.models.scenes.scene_registry import get_style_path
 from robocasa.models.scenes.scene_utils import *
 from robocasa.models.fixtures import *
+from robocasa.models.fixtures.counter import Counter
+from robocasa.models.fixtures.stove import Stove
 
 from blend2floorplan.utils.style_handler import get_style_path
 
@@ -363,43 +365,157 @@ def config_cam(viewer):
     viewer.cam.distance = 3.0
     viewer.cam.lookat[0:3] = [1.8, -8.0, 3.5]
 
+def check_stove_height_alignment(bm):
+    """检查相邻灶台的高度是否对齐"""
+    stoves = [obj for obj in bm.objects if obj.name.startswith("Stove")]
+    
+    if len(stoves) < 2:
+        return True  # 如果只有一个灶台或没有灶台，则无需检查对齐
+        
+    issues = []
+    tolerance = 0.001  # 允许的高度误差范围(米)
+    
+    for i, stove1 in enumerate(stoves):
+        for stove2 in stoves[i+1:]:
+            # 检查两个灶台是否相邻
+            distance = (stove1.location - stove2.location).length
+            if distance < 1.5:  # 如果灶台间距小于1.5米，认为是相邻的
+                height1 = stove1.location.z
+                height2 = stove2.location.z
+                
+                if abs(height1 - height2) > tolerance:
+                    issues.append(f"灶台 {stove1.name} 和 {stove2.name} 的高度不一致")
+    
+    return len(issues) == 0, issues
+
+def check_countertop_height_alignment(fixtures):
+    """检查台面尺寸是否符合标准，特别关注灶台高度"""
+    # 获取所有台面类型的设备（counter和stove），排除岛台
+    countertops = []
+    stoves = []  # 单独存储灶台
+    for name, fixture in fixtures.items():
+        if 'island' not in name.lower():
+            if isinstance(fixture, Counter):
+                countertops.append((name, fixture))
+            elif isinstance(fixture, Stove):
+                stoves.append((name, fixture))
+    
+    if len(countertops) < 1:
+        return True, []
+        
+    issues = []
+    tolerance = 0.001  # 允许的误差范围(米)
+    
+    # 从普通台面获取标准高度和深度
+    counter_depths = [fixture.size[1] for name, fixture in countertops]
+    counter_heights = [fixture.size[2] for name, fixture in countertops]
+    
+    # 使用普通台面的尺寸作为标准
+    from collections import Counter as CollectionCounter
+    standard_depth = CollectionCounter(counter_depths).most_common(1)[0][0]
+    standard_height = CollectionCounter(counter_heights).most_common(1)[0][0]
+    
+    print(f"\n标准台面尺寸:")
+    print(f"- 标准深度: {standard_depth:.3f}m")
+    print(f"- 标准高度: {standard_height:.3f}m")
+    
+    # 检查灶台
+    for name, stove in stoves:
+        current_depth = stove.size[1]
+        current_height = stove.size[2]
+        
+        # 检查深度
+        if abs(current_depth - standard_depth) > tolerance:
+            issue = f"警告: 灶台 {name} 的深度为 {current_depth:.3f}m, 与标准深度 {standard_depth:.3f}m 不符"
+            issues.append(issue)
+        
+        # 检查高度
+        if abs(current_height - standard_height) > tolerance:
+            issue = f"警告: 灶台 {name} 的高度为 {current_height:.3f}m, 与标准高度 {standard_height:.3f}m 不符"
+            issues.append(issue)
+            # 添加修改建议
+            if current_height < standard_height:
+                issues.append(f"建议: 请检查 {name} 的高度设置，可能需要调整到 {standard_height:.3f}m")
+    
+    # 检查其他台面
+    for name, counter in countertops:
+        current_depth = counter.size[1]
+        current_height = counter.size[2]
+        
+        # 检查深度
+        if abs(current_depth - standard_depth) > tolerance:
+            issue = f"台面 {name} 的深度为 {current_depth:.3f}m, 与标准深度 {standard_depth:.3f}m 不符"
+            issues.append(issue)
+        
+        # 检查高度
+        if abs(current_height - standard_height) > tolerance:
+            issue = f"台面 {name} 的高度为 {current_height:.3f}m, 与标准高度 {standard_height:.3f}m 不符"
+            issues.append(issue)
+    
+    return len(issues) == 0, issues
+
+def check_kitchen(fixtures):
+    """主检查函数"""
+    issues = []
+    all_passed = True
+    
+    # 检查台面高度对齐
+    height_aligned, height_issues = check_countertop_height_alignment(fixtures)
+    if not height_aligned:
+        all_passed = False
+        issues.extend(height_issues)
+    
+    return all_passed, issues
+
 if __name__ == "__main__":
     import argparse
     
-    # Create argument parser
+    # 修改参数解析器
     parser = argparse.ArgumentParser(description='Create fixtures from a layout YAML file')
     parser.add_argument('layout_path', type=str, help='Path to the layout YAML file')
     parser.add_argument('--demo', action='store_true', help='Whether to run the demo')
     parser.add_argument('--style_id', type=int, default=6, help='Style ID to use for layout generation')
+    parser.add_argument('--check', action='store_true', help='Run kitchen layout checks')
     
-    # Parse arguments
-    args = parser.parse_args()
+    try:
+        args = parser.parse_args()
+        fixtures = create_fixtures(args.layout_path)
+        
+        # 如果指定了check参数，运行检查
+        if args.check:
+            passed, issues = check_kitchen(fixtures)
+            if not passed:
+                for issue in issues:
+                    print(f"检测到问题: {issue}")
+            
+        # 如果指定了demo参数，运行demo
+        if args.demo:
+            model, data = create_and_load_scene(args.layout_path)
+            renderer = mujoco.Renderer(model)
 
-    if args.demo:
-        # Use the layout_path from command line arguments
-        model, data = create_and_load_scene(args.layout_path)
-        renderer = mujoco.Renderer(model)
-
-        with mujoco.viewer.launch_passive(model, data) as viewer:
-            config_cam(viewer)
-            while viewer.is_running():
-                mujoco.mj_step(model, data)
-
-                if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
+            with mujoco.viewer.launch_passive(model, data) as viewer:
+                config_cam(viewer)
+                while viewer.is_running():
+                    mujoco.mj_step(model, data)
+                    
                     line = sys.stdin.readline()
                     if line.strip() == "q":
                         viewer.close()
-                        # Use args.layout_path here as well
                         model, data = create_and_load_scene(args.layout_path)
                         renderer = mujoco.Renderer(model)
                         config_cam(viewer)
                         viewer = mujoco.viewer.launch_passive(model, data)
 
-                mujoco.mj_forward(model, data)
-                renderer.update_scene(data)
-                renderer.render()
-                viewer.sync()
+                    mujoco.mj_forward(model, data)
+                    renderer.update_scene(data)
+                    renderer.render()
+                    viewer.sync()
 
+            viewer.close()
+            
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        parser.print_help()
         viewer.close()
     else:
         fixtures = create_fixtures(args)

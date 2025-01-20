@@ -2,8 +2,8 @@ import bpy
 from ..operators.check_op import FLOORPLAN_OT_check, FLOORPLAN_OT_demo
 
 class FLOORPLAN_PT_check_panel(bpy.types.Panel):
-    """Creates a Panel for check operations"""
-    bl_label = "Check"
+    """Panel for checking the scene data"""
+    bl_label = "检查"
     bl_idname = "FLOORPLAN_PT_check_panel"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
@@ -19,8 +19,8 @@ class FLOORPLAN_PT_check_panel(bpy.types.Panel):
         
         # Check和Demo按钮
         col = layout.column(align=True)
-        col.operator(FLOORPLAN_OT_check.bl_idname, text="Check")
-        col.operator(FLOORPLAN_OT_demo.bl_idname, text="Demo")
+        col.operator(FLOORPLAN_OT_check.bl_idname, text="检查台面高度")
+        col.operator(FLOORPLAN_OT_demo.bl_idname, text="3D预览")
 
 def register_check_panel():
     # 先注册操作符
