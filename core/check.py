@@ -3,9 +3,11 @@ import yaml
 from robosuite.utils.mjcf_utils import array_to_string as a2s
 from robosuite.utils.mjcf_utils import string_to_array as s2a
 
-from robocasa.models.scenes.scene_registry import get_style_path
+# from robocasa.models.scenes.scene_registry import get_style_path
 from robocasa.models.scenes.scene_utils import *
 from robocasa.models.fixtures import *
+
+from blend2floorplan.utils.style_handler import get_style_path
 
 from robosuite.models.tasks import Task
 from robosuite.models.arenas import Arena
@@ -104,20 +106,20 @@ def check_syntax(fixture):
             )
 
 
-def create_fixtures(layout_path, rng=None):
+def create_fixtures(args, rng=None):
     try:
         style = int(style)
     except:
         pass
 
-    style_path = get_style_path(style_id=6)
+    style_path = get_style_path(style_id=args.style_id)
 
     # load style
     with open(style_path, "r") as f:
         style = yaml.safe_load(f)
 
     # load arena
-    with open(layout_path, "r") as f:
+    with open(args.layout_path, "r") as f:
         arena_config = yaml.safe_load(f)
 
     # contains all fixtures with updated configs
@@ -368,6 +370,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Create fixtures from a layout YAML file')
     parser.add_argument('layout_path', type=str, help='Path to the layout YAML file')
     parser.add_argument('--demo', action='store_true', help='Whether to run the demo')
+    parser.add_argument('--style_id', type=int, default=6, help='Style ID to use for layout generation')
     
     # Parse arguments
     args = parser.parse_args()
@@ -399,4 +402,4 @@ if __name__ == "__main__":
 
         viewer.close()
     else:
-        fixtures = create_fixtures(args.layout_path)
+        fixtures = create_fixtures(args)

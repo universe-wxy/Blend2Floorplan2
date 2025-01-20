@@ -2,6 +2,7 @@
 import bpy
 import subprocess  # Import subprocess to run system commands
 import os
+import platform  # 添加platform模块
 
 class FLOORPLAN_OT_check(bpy.types.Operator):
     """Check the scene data"""
@@ -15,9 +16,13 @@ class FLOORPLAN_OT_check(bpy.types.Operator):
             python_script_path = os.path.join(current_dir, 'core', 'check.py')
             
             layout_path = bpy.context.scene.get('exported_yaml')
+            style_id = str(context.scene.check_style_id)  # 使用check_style_id而不是style_id
 
+            # 根据操作系统选择Python解释器
+            python_interpreter = 'mjpython' if platform.system() == 'Darwin' else 'python'
+            
             process = subprocess.Popen(
-                ['conda', 'run', '-n', 'robocasa', 'python', python_script_path, layout_path],
+                ['conda', 'run', '-n', 'robocasa', python_interpreter, python_script_path, layout_path, '--style_id', style_id],  # 添加style_id参数
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
             )
@@ -48,9 +53,13 @@ class FLOORPLAN_OT_demo(bpy.types.Operator):
             python_script_path = os.path.join(current_dir, 'core', 'check.py')
             
             layout_path = bpy.context.scene.get('exported_yaml')
+            style_id = str(context.scene.check_style_id)  # 使用check_style_id而不是style_id
 
+            # 根据操作系统选择Python解释器
+            python_interpreter = 'mjpython' if platform.system() == 'Darwin' else 'python'
+            
             process = subprocess.Popen(
-                ['conda', 'run', '-n', 'robocasa', 'python', python_script_path, layout_path, '--demo'],
+                ['conda', 'run', '-n', 'robocasa', python_interpreter, python_script_path, layout_path, '--demo', '--style_id', style_id],  # 添加style_id参数
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
             )
@@ -68,4 +77,6 @@ class FLOORPLAN_OT_demo(bpy.types.Operator):
             return {'CANCELLED'}
             
         return {'FINISHED'}
+
+
 

@@ -34,6 +34,11 @@ class FLOORPLAN_OT_convert(bpy.types.Operator):
         except Exception as e:
             self.report({'ERROR'}, f"Error converting file: {str(e)}")
             return {'CANCELLED'}
+# class ExportOp(BaseOp):
+#     def __init__(self):
+#         super().__init__()
+#         self.parser.add_argument('--style_id', type=int, default=6,
+#                                help='Style ID to use for layout generation')
 
 def register_export_op():
     bpy.utils.register_class(FLOORPLAN_OT_export)
