@@ -1,5 +1,5 @@
 import bpy
-from ..operators.export_op import FLOORPLAN_OT_export, FLOORPLAN_OT_convert
+from ..operators.export_op import FLOORPLAN_OT_convert
 
 class FLOORPLAN_PT_export_panel(bpy.types.Panel):
     """
@@ -13,15 +13,12 @@ class FLOORPLAN_PT_export_panel(bpy.types.Panel):
     
     def draw(self, context):
         layout = self.layout
-        layout.operator(FLOORPLAN_OT_export.bl_idname, text="Export to Json")
-        layout.operator(FLOORPLAN_OT_convert.bl_idname, text="Json to Yaml")
+        layout.operator(FLOORPLAN_OT_convert.bl_idname, text="Export to Yaml")
 
 def register_export_panel():
-    bpy.utils.register_class(FLOORPLAN_OT_export)
     bpy.utils.register_class(FLOORPLAN_OT_convert)
     bpy.utils.register_class(FLOORPLAN_PT_export_panel)
 
 def unregister_export_panel():
-    bpy.utils.unregister_class(FLOORPLAN_OT_export)
     bpy.utils.unregister_class(FLOORPLAN_OT_convert)
     bpy.utils.unregister_class(FLOORPLAN_PT_export_panel)

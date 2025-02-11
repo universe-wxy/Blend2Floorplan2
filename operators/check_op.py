@@ -82,6 +82,33 @@ def get_python_interpreter():
     else:  # Windows 和 Linux
         return "python"
 
+def get_latest_yaml(blend_path):
+    """获取同名文件夹下最新的yaml文件"""
+    if not blend_path:
+        return None
+    
+    # 获取blend文件所在目录和文件名（不含扩展名）
+    blend_dir = os.path.dirname(blend_path)
+    blend_name = os.path.splitext(os.path.basename(blend_path))[0]
+    
+    # 构建同名文件夹路径
+    yaml_dir = os.path.join(blend_dir, blend_name)
+    
+    if not os.path.exists(yaml_dir):
+        return None
+    
+    # 获取所有yaml文件
+    yaml_files = [f for f in os.listdir(yaml_dir) 
+                 if f.endswith(('.yaml', '.yml'))]
+    
+    if not yaml_files:
+        return None
+    
+    # 按修改时间排序，返回最新的
+    latest_yaml = max(yaml_files,
+                     key=lambda f: os.path.getmtime(os.path.join(yaml_dir, f)))
+    return os.path.join(yaml_dir, latest_yaml)
+
 class FLOORPLAN_OT_check(bpy.types.Operator):
     """Check the scene data"""
     bl_idname = "floorplan.check"
@@ -93,9 +120,10 @@ class FLOORPLAN_OT_check(bpy.types.Operator):
             current_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
             python_script_path = os.path.join(current_dir, 'core', 'check.py')
             
-            layout_path = bpy.context.scene.get('exported_yaml')
+            # 使用选择的yaml文件路径
+            layout_path = context.scene.yaml_file_path
             if not layout_path:
-                self.report({'ERROR'}, "请先导出YAML文件")
+                self.report({'ERROR'}, "请选择YAML文件")
                 return {'CANCELLED'}
               
             style_id = int(context.scene.check_style_id)
@@ -152,9 +180,30 @@ class FLOORPLAN_OT_demo(bpy.types.Operator):
             current_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
             python_script_path = os.path.join(current_dir, 'core', 'check.py')
             
-            layout_path = bpy.context.scene.get('exported_yaml')
+            # 获取yaml文件名
+            yaml_filename = context.scene.yaml_file_path
+            if not yaml_filename:
+                self.report({'ERROR'}, "请选择YAML文件")
+                return {'CANCELLED'}
+            
+            # 获取完整路径
+            blend_dir = os.path.dirname(bpy.data.filepath)
+            blend_name = os.path.splitext(os.path.basename(bpy.data.filepath))[0]
+            yaml_dir = os.path.join(blend_dir, blend_name)
+            layout_path = os.path.join(yaml_dir, yaml_filename)
+            
+            print(f"Debug info:")
+            print(f"Current dir: {current_dir}")
+            print(f"Python script path: {python_script_path}")
+            print(f"YAML filename: {yaml_filename}")
+            print(f"Layout path: {layout_path}")
+            
+            if not os.path.exists(layout_path):
+                self.report({'ERROR'}, f"找不到YAML文件: {layout_path}")
+                return {'CANCELLED'}
+            
             style_id = int(context.scene.check_style_id)
-
+            
             # 获取conda路径
             conda_path = find_conda_path()
             if not conda_path:
@@ -163,24 +212,43 @@ class FLOORPLAN_OT_demo(bpy.types.Operator):
 
             # 获取Python解释器
             python_interpreter = get_python_interpreter()
-
+            
+            # 构建完整命令
+            cmd = [
+                conda_path, 
+                'run', 
+                '-n', 
+                'robocasa', 
+                python_interpreter, 
+                python_script_path,
+                layout_path,
+                '--demo',
+                '--style_id',
+                str(style_id)
+            ]
+            
+            print(f"Executing command: {' '.join(cmd)}")
+            
             process = subprocess.Popen(
-                [conda_path, 'run', '-n', 'robocasa', python_interpreter, python_script_path, 
-                 layout_path, '--demo', '--style_id', str(style_id)],
+                cmd,
                 stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
+                stderr=subprocess.PIPE,
+                universal_newlines=True
             )
 
             stdout, stderr = process.communicate()
+            print(f"Process stdout: {stdout}")
+            print(f"Process stderr: {stderr}")
             
-            if process.returncode == 0:
-                self.report({'INFO'}, "Demo script executed successfully")
-            else:
-                self.report({'ERROR'}, f"Demo script failed: {stderr.decode()}")
+            if process.returncode != 0:
+                self.report({'ERROR'}, f"执行失败: {stderr}")
                 return {'CANCELLED'}
+            
+            self.report({'INFO'}, "执行成功")
+            return {'FINISHED'}
                 
         except Exception as e:
-            self.report({'ERROR'}, f"Failed to execute demo script: {str(e)}")
+            self.report({'ERROR'}, f"执行失败: {str(e)}")
+            import traceback
+            print(f"Error traceback: {traceback.format_exc()}")
             return {'CANCELLED'}
-
-        return {'FINISHED'}

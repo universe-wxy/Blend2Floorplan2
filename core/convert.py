@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 from ..processors import process_room_data, process_group_data
 from ..utils import custom_format
@@ -23,6 +24,9 @@ def json_to_yaml(json_file: str) -> str:
         with open(yaml_file, 'w') as f:
             formatted_lines = custom_format(yaml_data)
             f.write('\n'.join(formatted_lines))
+
+        # 删除JSON文件
+        os.remove(json_file)
 
         return yaml_file
         
