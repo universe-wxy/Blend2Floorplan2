@@ -1,6 +1,7 @@
 import bpy
 import os
 import json
+import time
 from typing import Any
 
 def get_default_root_path() -> str:
@@ -29,7 +30,7 @@ def get_output_path() -> str:
         root_path = get_default_root_path()
         blend_file_path = os.path.join(root_path, "test_scene.blend")
     blend_file_name = os.path.splitext(os.path.basename(blend_file_path))[0]
-    return os.path.join(get_output_dir(), f"{blend_file_name}.json")
+    return os.path.join(get_output_dir(), f"{blend_file_name}_{time.strftime('%Y%m%d_%H%M%S')}.json")
 
 def save_scene_data(data: Any) -> str:
     """Save scene data to JSON file"""
