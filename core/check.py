@@ -584,6 +584,78 @@ def check_furniture(fixtures):
     
     return len(issues) == 0, issues
 
+def check_edge_alignment(fixtures):
+    """检查墙壁和地板之间相邻部分是否对齐
+    
+    Args:
+        fixtures: 字典，包含所有家具对象
+        
+    Returns:
+        tuple: (是否全部通过检查, 问题列表)
+    """
+    issues = []
+    tolerance = 1e-10  # 将对齐误差减小到几乎可以忽略的值
+    overlap_threshold = 0.1  # 判定为重叠的最小距离（米）
+    
+    # 分别获取墙壁和地板
+    walls = {name: fix for name, fix in fixtures.items() if isinstance(fix, Wall)}
+    floors = {name: fix for name, fix in fixtures.items() if isinstance(fix, Floor)}
+    
+    # 检查每个墙壁和地板之间的对齐
+    for wall_name, wall in walls.items():
+        for floor_name, floor in floors.items():
+            # 获取位置和尺寸信息
+            wall_pos, wall_size = wall.pos, wall.size
+            floor_pos, floor_size = floor.pos, floor.size
+            
+            # 计算边界框
+            wall_bounds = {
+                'left': wall_pos[0] - wall_size[0]/2,
+                'right': wall_pos[0] + wall_size[0]/2,
+                'front': wall_pos[1] - wall_size[1]/2,
+                'back': wall_pos[1] + wall_size[1]/2
+            }
+            
+            floor_bounds = {
+                'left': floor_pos[0] - floor_size[0]/2,
+                'right': floor_pos[0] + floor_size[0]/2,
+                'front': floor_pos[1] - floor_size[1]/2,
+                'back': floor_pos[1] + floor_size[1]/2
+            }
+            
+            # 检查x方向的重叠
+            x_overlap = min(wall_bounds['right'], floor_bounds['right']) - \
+                       max(wall_bounds['left'], floor_bounds['left'])
+                       
+            # 检查y方向的重叠
+            y_overlap = min(wall_bounds['back'], floor_bounds['back']) - \
+                       max(wall_bounds['front'], floor_bounds['front'])
+            
+            # 如果有显著重叠，检查相应边缘的对齐情况
+            if x_overlap > overlap_threshold:
+                # 检查前边缘对齐（如果前边缘接近）
+                if abs(wall_bounds['front'] - floor_bounds['front']) < overlap_threshold:
+                    if abs(wall_bounds['front'] - floor_bounds['front']) > tolerance:
+                        issues.append(f"警告: {wall_name} 和 {floor_name} 的前边缘未对齐")
+                
+                # 检查后边缘对齐（如果后边缘接近）
+                if abs(wall_bounds['back'] - floor_bounds['back']) < overlap_threshold:
+                    if abs(wall_bounds['back'] - floor_bounds['back']) > tolerance:
+                        issues.append(f"警告: {wall_name} 和 {floor_name} 的后边缘未对齐")
+            
+            if y_overlap > overlap_threshold:
+                # 检查左边缘对齐（如果左边缘接近）
+                if abs(wall_bounds['left'] - floor_bounds['left']) < overlap_threshold:
+                    if abs(wall_bounds['left'] - floor_bounds['left']) > tolerance:
+                        issues.append(f"警告: {wall_name} 和 {floor_name} 的左边缘未对齐")
+                
+                # 检查右边缘对齐（如果右边缘接近）
+                if abs(wall_bounds['right'] - floor_bounds['right']) < overlap_threshold:
+                    if abs(wall_bounds['right'] - floor_bounds['right']) > tolerance:
+                        issues.append(f"警告: {wall_name} 和 {floor_name} 的右边缘未对齐")
+    
+    return len(issues) == 0, issues
+
 def check_kitchen(fixtures):
     """主检查函数"""
     issues = []
@@ -600,6 +672,12 @@ def check_kitchen(fixtures):
     if not furniture_check:
         all_passed = False
         issues.extend(furniture_issues)
+    
+    # 检查边缘对齐
+    alignment_check, alignment_issues = check_edge_alignment(fixtures)
+    if not alignment_check:
+        all_passed = False
+        issues.extend(alignment_issues)
     
     # 直接打印检查结果，确保输出包含关键字
     if not all_passed:
