@@ -231,7 +231,7 @@ def create_fixtures(args, rng=None):
 
         # update fixture position
         if fixture_config["type"] not in FIXTURES_INTERIOR.values():
-            # relative positioning
+            # 相对定位 - 通过align_to指定
             if "align_to" in fixture_config:
                 pos = get_relative_position(
                     fixture,
@@ -240,25 +240,22 @@ def create_fixtures(args, rng=None):
                     configs[fixture_config["align_to"]],
                 )
 
+            # 相对定位 - 通过stack_on指定
             elif "stack_on" in fixture_config:
                 stack_on = fixtures[fixture_config["stack_on"]]
-
-                # account for off-centered objects
                 stack_on_center = stack_on.center
-
-                # infer unspecified axes of position
                 pos = fixture_config["pos"]
                 if pos[0] is None:
                     pos[0] = stack_on.pos[0] + stack_on_center[0]
                 if pos[1] is None:
                     pos[1] = stack_on.pos[1] + stack_on_center[1]
-
-                # calculate height of fixture
                 pos[2] = stack_on.pos[2] + stack_on.size[2] / 2 + fixture.size[2] / 2
                 pos[2] += stack_on_center[2]
+
             else:
-                # absolute position
+                # 使用配置中的位置（可能是相对位置或绝对位置）
                 pos = fixture_config.get("pos", None)
+
             if pos is not None and type(fixture) not in [Wall, Floor]:
                 fixture.set_pos(pos)
 
@@ -268,39 +265,22 @@ def create_fixtures(args, rng=None):
 
     # update the rotation and postion of each fixture based on their group
     for name, fixture in fixtures.items():
-        # check if updates are necessary
         config = configs[name]
         if "group_origin" not in config:
             continue
 
-        # TODO: add default for group origin?
-        # rotate about this coordinate (around the z-axis)
-        origin = config["group_origin"]
-        pos = config["group_pos"]
-        z_rot = config["group_z_rot"]
-        displacement = [pos[0] - origin[0], pos[1] - origin[1]]
-
+        # 只更新旋转信息，不改变位置
         if type(fixture) not in [Wall, Floor]:
-            dx = fixture.pos[0] - origin[0]
-            dy = fixture.pos[1] - origin[1]
-            dx_rot = dx * np.cos(z_rot) - dy * np.sin(z_rot)
-            dy_rot = dx * np.sin(z_rot) + dy * np.cos(z_rot)
-
-            x_rot = origin[0] + dx_rot
-            y_rot = origin[1] + dy_rot
-            z = fixture.pos[2]
-            pos_new = [x_rot + displacement[0], y_rot + displacement[1], z]
-
-            # account for previous z-axis rotation
+            z_rot = config["group_z_rot"]
+            
+            # 更新旋转
             rot_prev = fixture._obj.get("euler")
             if rot_prev is not None:
-                # TODO: switch to quaternion since euler rotations are ambiguous
                 rot_new = s2a(rot_prev)
                 rot_new[2] += z_rot
             else:
                 rot_new = [0, 0, z_rot]
-
-            fixture._obj.set("pos", a2s(pos_new))
+            
             fixture._obj.set("euler", a2s(rot_new))
 
     return fixtures
