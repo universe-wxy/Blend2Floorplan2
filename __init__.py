@@ -22,12 +22,12 @@ bl_info = {
 }
 
 def register():
-    # register_room_panel()
+    register_room_panel()
     register_export_panel()
     register_check_panel()
 
 def unregister():
-    # unregister_room_panel()
+    unregister_room_panel()
     unregister_export_panel()
     unregister_check_panel()
 

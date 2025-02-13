@@ -1,7 +1,8 @@
 import bpy
 from ..utils.constants import (
     OBJECT_TYPES,
-    WALL_SIDES
+    WALL_SIDES,
+    WALL_ACCESSORIES_SET
 )
 from ..operators.spawn_op import FLOORPLAN_OT_spawn
 
@@ -27,6 +28,14 @@ def register_properties():
         description="Name of the wall",
         default="wall"
     )
+    
+    # Add Wall_accessory Type
+    bpy.types.Scene.accessory_type=bpy.props.EnumProperty(
+        items=WALL_ACCESSORIES_SET,
+        name="accessory type",
+        description="Select accessory type",
+        default="wallaccessory"
+    )
 
 class FLOORPLAN_PT_spawn_panel(bpy.types.Panel):
     """Panel for spawning room objects"""
@@ -46,6 +55,9 @@ class FLOORPLAN_PT_spawn_panel(bpy.types.Panel):
         if context.scene.room_object_type == 'wall':
             layout.prop(context.scene, "wall_side")
             layout.prop(context.scene, "wall_name")
+        
+        if context.scene.room_object_type == 'wallaccessory':
+            layout.prop(context.scene,"accessory_type")
 
         # Add the spawn button
         layout.operator(FLOORPLAN_OT_spawn.bl_idname, text="Spawn")
@@ -61,3 +73,4 @@ def unregister_room_panel():
     del bpy.types.Scene.room_object_type
     del bpy.types.Scene.wall_name
     del bpy.types.Scene.wall_side
+    del bpy.types.Scene.accessory_type

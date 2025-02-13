@@ -53,8 +53,8 @@ class FLOORPLAN_PT_check_panel(bpy.types.Panel):
         
         # Check和Demo按钮
         col = layout.column(align=True)
-        col.operator(FLOORPLAN_OT_check.bl_idname, text="检查台面高度")
-        col.operator(FLOORPLAN_OT_demo.bl_idname, text="3D预览")
+        col.operator(FLOORPLAN_OT_check.bl_idname, text="检查")
+        col.operator(FLOORPLAN_OT_demo.bl_idname, text="预览")
 
 def register_check_panel():
     # 注册属性
@@ -89,7 +89,7 @@ def register_check_panel():
         bpy.app.handlers.load_post.append(set_default_yaml)
     
     # 注册类
-    # bpy.utils.register_class(FLOORPLAN_OT_check)
+    bpy.utils.register_class(FLOORPLAN_OT_check)
     bpy.utils.register_class(FLOORPLAN_OT_demo)
     bpy.utils.register_class(FLOORPLAN_PT_check_panel)
 
@@ -97,7 +97,7 @@ def unregister_check_panel():
     # 注销类
     bpy.utils.unregister_class(FLOORPLAN_PT_check_panel)
     bpy.utils.unregister_class(FLOORPLAN_OT_demo)
-    # bpy.utils.unregister_class(FLOORPLAN_OT_check)
+    bpy.utils.unregister_class(FLOORPLAN_OT_check)
     
     # 删除属性
     if hasattr(bpy.types.Scene, "yaml_file_path"):

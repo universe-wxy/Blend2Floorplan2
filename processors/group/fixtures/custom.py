@@ -42,7 +42,7 @@ def process_qianrugui(value, key, group_pos, group_z_rot):
     microwave_info = {
         'name': f"{key}_microwave",
         'type': 'microwave',
-        'size': [size[0] - 0.1, size[1], None]
+        'size': [size[0] - 0.05, size[1]-0.15, None]
     }
 
     microwave_housing_info = {

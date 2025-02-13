@@ -137,21 +137,38 @@ class FLOORPLAN_OT_check(bpy.types.Operator):
             # 获取Python解释器
             python_interpreter = get_python_interpreter()
 
+            # 获取完整的yaml文件路径
+            blend_dir = os.path.dirname(bpy.data.filepath)
+            blend_name = os.path.splitext(os.path.basename(bpy.data.filepath))[0]
+            yaml_dir = os.path.join(blend_dir, blend_name)
+            layout_path = os.path.join(yaml_dir, layout_path)  # 使用完整路径
+
             # 运行检查命令
             process = subprocess.Popen(
                 [conda_path, 'run', '-n', 'robocasa', python_interpreter, python_script_path, 
                  layout_path, '--check', '--style_id', str(style_id)],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                universal_newlines=True
+                universal_newlines=True,
+                cwd=os.path.dirname(python_script_path)  # 设置工作目录
             )
 
             stdout, stderr = process.communicate()
             
-            # 解析输出
-            if "检测到问题" in stdout:
-                # 找出所有检测到的问题
-                issues = [line for line in stdout.split('\n') if "检测到问题" in line]
+            # 调试输出
+            print(f"Process stdout:\n{stdout}")
+            print(f"Process stderr:\n{stderr}")
+            
+            # 改进输出解析逻辑
+            if process.returncode != 0 or "检测到问题" in stdout:
+                # 提取所有包含问题的行
+                issues = [line.replace("检测到问题: ", "") 
+                         for line in stdout.split('\n') 
+                         if "检测到问题" in line]
+                
+                if not issues:  # 如果没有提取到具体问题，但有错误
+                    issues = [stderr if stderr else "未知错误"]
+                
                 # 在Blender界面显示问题
                 def draw(self, context):
                     layout = self.layout
@@ -159,7 +176,7 @@ class FLOORPLAN_OT_check(bpy.types.Operator):
                         layout.label(text=issue)
                 
                 bpy.context.window_manager.popup_menu(draw, title="检查结果", icon='ERROR')
-                self.report({'WARNING'}, "发现问题，请查看详细信息")
+                self.report({'WARNING'}, f"发现{len(issues)}个问题，请查看详细信息")
             else:
                 self.report({'INFO'}, "检查通过，未发现问题")
             
@@ -167,6 +184,8 @@ class FLOORPLAN_OT_check(bpy.types.Operator):
                 
         except Exception as e:
             self.report({'ERROR'}, f"检查失败: {str(e)}")
+            import traceback
+            print(f"Error traceback: {traceback.format_exc()}")
             return {'CANCELLED'}
     
 class FLOORPLAN_OT_demo(bpy.types.Operator):

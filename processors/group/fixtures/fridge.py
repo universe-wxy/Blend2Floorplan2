@@ -13,7 +13,7 @@ def process_fridge(value, key, group_pos, group_z_rot):
     fridge_info = {
         'name': key,
         'type': 'fridge',
-        'size': [size[0] - 0.04, size[1], size[2]]
+        'size': [size[0], size[1], size[2]]
     }
 
     housing_info = {

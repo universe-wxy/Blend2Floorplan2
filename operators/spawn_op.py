@@ -2,6 +2,7 @@ import bpy
 from ..spawners.floor import Floor
 from ..spawners.wall import Wall
 from ..spawners.wall_accessory import WallAccessory
+from ..spawners.cube import Cube
 
 class FLOORPLAN_OT_spawn(bpy.types.Operator):
     """Spawn selected object type in the scene"""
@@ -18,7 +19,9 @@ class FLOORPLAN_OT_spawn(bpy.types.Operator):
             obj = Floor(context)
         elif object_type == 'wall':
             obj = Wall(context)
-        elif object_type == 'wall_accessory':
+        elif object_type == 'cube':
+            obj = Cube(context)
+        elif object_type == 'wallaccessory':
             obj = WallAccessory(context)
 
         obj.spawn(context)

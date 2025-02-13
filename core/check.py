@@ -6,8 +6,6 @@ from robosuite.utils.mjcf_utils import string_to_array as s2a
 from robocasa.models.scenes.scene_registry import get_style_path
 from robocasa.models.scenes.scene_utils import *
 from robocasa.models.fixtures import *
-from robocasa.models.fixtures.counter import Counter
-from robocasa.models.fixtures.stove import Stove
 
 from robosuite.models.tasks import Task
 from robosuite.models.arenas import Arena
@@ -416,69 +414,173 @@ def check_stove_height_alignment(bm):
     
     return len(issues) == 0, issues
 
-def check_countertop_height_alignment(fixtures):
-    """检查台面尺寸是否符合标准，特别关注灶台高度"""
-    # 获取所有台面类型的设备（counter和stove），排除岛台
-    countertops = []
-    stoves = []  # 单独存储灶台
+# def check_countertop_height_alignment(fixtures):
+#     """检查台面尺寸是否符合标准，特别关注灶台高度"""
+#     # 获取所有台面类型的设备（counter和stove），排除岛台
+#     countertops = []
+#     stoves = []  # 单独存储灶台
+#     for name, fixture in fixtures.items():
+#         if 'island' not in name.lower():
+#             if isinstance(fixture, Counter):
+#                 countertops.append((name, fixture))
+#             elif isinstance(fixture, Stove):
+#                 stoves.append((name, fixture))
+    
+#     if len(countertops) < 1:
+#         return True, []
+        
+#     issues = []
+#     tolerance = 0.001  # 允许的误差范围(米)
+    
+#     # 从普通台面获取标准高度和深度
+#     counter_depths = [fixture.size[1] for name, fixture in countertops]
+#     counter_heights = [fixture.size[2] for name, fixture in countertops]
+    
+#     # 使用普通台面的尺寸作为标准
+#     from collections import Counter as CollectionCounter
+#     standard_depth = CollectionCounter(counter_depths).most_common(1)[0][0]
+#     standard_height = CollectionCounter(counter_heights).most_common(1)[0][0]
+    
+#     print(f"\n标准台面尺寸:")
+#     print(f"- 标准深度: {standard_depth:.3f}m")
+#     print(f"- 标准高度: {standard_height:.3f}m")
+    
+#     # 检查灶台
+#     for name, stove in stoves:
+#         current_depth = stove.size[1]
+#         current_height = stove.size[2]
+        
+#         # 检查深度
+#         if abs(current_depth - standard_depth) > tolerance:
+#             issue = f"警告: 灶台 {name} 的深度为 {current_depth:.3f}m, 与标准深度 {standard_depth:.3f}m 不符"
+#             issues.append(issue)
+        
+#         # 检查高度
+#         if abs(current_height - standard_height) > tolerance:
+#             issue = f"警告: 灶台 {name} 的高度为 {current_height:.3f}m, 与标准高度 {standard_height:.3f}m 不符"
+#             issues.append(issue)
+#             # 添加修改建议
+#             if current_height < standard_height:
+#                 issues.append(f"建议: 请检查 {name} 的高度设置，可能需要调整到 {standard_height:.3f}m")
+    
+#     # 检查其他台面
+#     for name, counter in countertops:
+#         current_depth = counter.size[1]
+#         current_height = counter.size[2]
+        
+#         # 检查深度
+#         if abs(current_depth - standard_depth) > tolerance:
+#             issue = f"台面 {name} 的深度为 {current_depth:.3f}m, 与标准深度 {standard_depth:.3f}m 不符"
+#             issues.append(issue)
+        
+#         # 检查高度
+#         if abs(current_height - standard_height) > tolerance:
+#             issue = f"台面 {name} 的高度为 {current_height:.3f}m, 与标准高度 {standard_height:.3f}m 不符"
+#             issues.append(issue)
+    
+#     return len(issues) == 0, issues
+
+def check_furniture(fixtures):
+    """检查指定家电尺寸是否符合标准，且每种物品有且只有一个"""
+    issues = []
+    # 定义需要检查的家电类型及其标准尺寸
+    household_appliances = {
+        Fridge: {
+            'name': '冰箱',
+            'required': True,  # 表示必须存在
+            'specs': {
+                'length': {'value': 0.9, 'tolerance': 0.01},
+                'depth': {'value': 0.8, 'tolerance': 0.01},
+                'height': {'values': [1.75, 1.78,1.88],'tolerance': 0.01}
+            }
+        },
+        Stove: {
+            'name': '灶台',
+            'required': True,
+            'specs': {
+                'length': {'value': 0.76, 'tolerance': 0.01},
+                'depth': {'value': 0.66, 'tolerance': 0.01},
+                'height': {'value': 0.915, 'tolerance': 0.01}
+            }
+        },
+        Dishwasher: {
+            'name': '洗碗机',
+            'required': True,
+            'specs': {
+                'length': {'value': 0.6, 'tolerance': 0.01},
+                'depth': {'value': 0.6, 'tolerance': 0.01},
+                'height': {'value': 0.89, 'tolerance': 0.01}
+            }
+        },
+        Microwave: {
+            'name': '微波炉',
+            'required': True,
+            'specs': {
+                'length': {'value': 0.75, 'tolerance': 0.01},
+                'depth': {'values': [0.45, 0.5], 'tolerance': 0.01}
+                # height不做要求
+            }
+        }
+    }
+    
+    # 收集所有符合类型的家电
+    appliances_found = {appliance_type: [] for appliance_type in household_appliances.keys()}
+    
     for name, fixture in fixtures.items():
         if 'island' not in name.lower():
-            if isinstance(fixture, Counter):
-                countertops.append((name, fixture))
-            elif isinstance(fixture, Stove):
-                stoves.append((name, fixture))
+            for appliance_type in household_appliances.keys():
+                if isinstance(fixture, appliance_type):
+                    appliances_found[appliance_type].append((name, fixture))
     
-    if len(countertops) < 1:
-        return True, []
+    # 检查每种家电的数量
+    for appliance_type, items in appliances_found.items():
+        appliance_info = household_appliances[appliance_type]
+        appliance_name = appliance_info['name']
+        count = len(items)
         
-    issues = []
-    tolerance = 0.001  # 允许的误差范围(米)
+        if appliance_info['required']:
+            if count == 0:
+                issues.append(f"错误：缺少{appliance_name}")
+            elif count > 1:
+                issues.append(f"错误：{appliance_name}数量过多（当前{count}个，应为1个）")
     
-    # 从普通台面获取标准高度和深度
-    counter_depths = [fixture.size[1] for name, fixture in countertops]
-    counter_heights = [fixture.size[2] for name, fixture in countertops]
-    
-    # 使用普通台面的尺寸作为标准
-    from collections import Counter as CollectionCounter
-    standard_depth = CollectionCounter(counter_depths).most_common(1)[0][0]
-    standard_height = CollectionCounter(counter_heights).most_common(1)[0][0]
-    
-    print(f"\n标准台面尺寸:")
-    print(f"- 标准深度: {standard_depth:.3f}m")
-    print(f"- 标准高度: {standard_height:.3f}m")
-    
-    # 检查灶台
-    for name, stove in stoves:
-        current_depth = stove.size[1]
-        current_height = stove.size[2]
+    # 检查每个家电的尺寸
+    for appliance_type, items in appliances_found.items():
+        specs = household_appliances[appliance_type]['specs']
+        appliance_name = household_appliances[appliance_type]['name']
         
-        # 检查深度
-        if abs(current_depth - standard_depth) > tolerance:
-            issue = f"警告: 灶台 {name} 的深度为 {current_depth:.3f}m, 与标准深度 {standard_depth:.3f}m 不符"
-            issues.append(issue)
-        
-        # 检查高度
-        if abs(current_height - standard_height) > tolerance:
-            issue = f"警告: 灶台 {name} 的高度为 {current_height:.3f}m, 与标准高度 {standard_height:.3f}m 不符"
-            issues.append(issue)
-            # 添加修改建议
-            if current_height < standard_height:
-                issues.append(f"建议: 请检查 {name} 的高度设置，可能需要调整到 {standard_height:.3f}m")
-    
-    # 检查其他台面
-    for name, counter in countertops:
-        current_depth = counter.size[1]
-        current_height = counter.size[2]
-        
-        # 检查深度
-        if abs(current_depth - standard_depth) > tolerance:
-            issue = f"台面 {name} 的深度为 {current_depth:.3f}m, 与标准深度 {standard_depth:.3f}m 不符"
-            issues.append(issue)
-        
-        # 检查高度
-        if abs(current_height - standard_height) > tolerance:
-            issue = f"台面 {name} 的高度为 {current_height:.3f}m, 与标准高度 {standard_height:.3f}m 不符"
-            issues.append(issue)
+        for name, item in items:
+            dimensions = {
+                'length': {'value': item.size[0], 'name': '长度'},
+                'depth': {'value': item.size[1], 'name': '深度'},
+                'height': {'value': item.size[2], 'name': '高度'}
+            }
+            
+            for dim_key, dim_info in dimensions.items():
+                if dim_key in specs:  # 只检查有规格要求的尺寸
+                    spec = specs[dim_key]
+                    dim_value = dim_info['value']
+                    dim_name = dim_info['name']
+                    tolerance = spec.get('tolerance', 0.01)
+                    
+                    if 'values' in spec:
+                        # 多个允许值的情况
+                        valid_values = spec['values']
+                        if not any(abs(dim_value - allowed_value) <= tolerance 
+                                 for allowed_value in valid_values):
+                            values_str = ' 或 '.join([f"{v:.3f}" for v in valid_values])
+                            issues.append(
+                                f"错误：{name}的{dim_name}为{dim_value:.3f}m，"
+                                f"标准值应为{values_str}m"
+                            )
+                    elif 'value' in spec:
+                        # 单个允许值的情况
+                        standard_value = spec['value']
+                        if abs(dim_value - standard_value) > tolerance:
+                            issues.append(
+                                f"错误：{name}的{dim_name}为{dim_value:.3f}m，"
+                                f"标准值应为{standard_value:.3f}m"
+                            )
     
     return len(issues) == 0, issues
 
@@ -487,11 +589,25 @@ def check_kitchen(fixtures):
     issues = []
     all_passed = True
     
-    # 检查台面高度对齐
-    height_aligned, height_issues = check_countertop_height_alignment(fixtures)
-    if not height_aligned:
+    # # 检查台面高度对齐
+    # height_aligned, height_issues = check_countertop_height_alignment(fixtures)
+    # if not height_aligned:
+    #     all_passed = False
+    #     issues.extend(height_issues)
+    
+    # 检查家具
+    furniture_check, furniture_issues = check_furniture(fixtures)
+    if not furniture_check:
         all_passed = False
-        issues.extend(height_issues)
+        issues.extend(furniture_issues)
+    
+    # 直接打印检查结果，确保输出包含关键字
+    if not all_passed:
+        print("\n检查结果:")
+        for issue in issues:
+            print(f"检测到问题: {issue}")
+    else:
+        print("\n检查通过，未发现问题")
     
     return all_passed, issues
 
@@ -511,9 +627,9 @@ if __name__ == "__main__":
         
         if args.check:
             passed, issues = check_kitchen(fixtures)
+            # 确保命令行输出结果
             if not passed:
-                for issue in issues:
-                    print(f"检测到问题: {issue}")
+                sys.exit(1)  # 添加非零退出码表示检查失败
             
         if args.demo:
             model, data = create_and_load_scene(args)

@@ -1,7 +1,8 @@
 OBJECT_TYPES = [
     ('floor', "Floor", "Spawn a floor object"),
     ('wall', "Wall", "Spawn a wall object"),
-    ('wall_accessory', "Wall Accessory", "Spawn a wall accessory"),
+    ('cube','Cube','Spawn a cube object'),
+    ('wallaccessory', "WallAccessory", "Spawn a wall accessory"),
 ]
 
 WALL_SIDES = [
@@ -51,6 +52,6 @@ OBJECTS_SET = {
 }
 
 WALL_ACCESSORIES_SET = {
-    'wall_accessory',
-    'light_switch'
+    ('wallaccessory', "wallaccessory", "wallaccessory"),
+    ('lightswitch', "lightswitch", "lightswitch")
 }
