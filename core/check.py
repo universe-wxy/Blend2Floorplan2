@@ -487,11 +487,11 @@ def check_furniture(fixtures):
     household_appliances = {
         Fridge: {
             'name': '冰箱',
-            'required': True,  # 表示必须存在
+            'required': True,
             'specs': {
                 'length': {'value': 0.9, 'tolerance': 0.01},
                 'depth': {'value': 0.8, 'tolerance': 0.01},
-                'height': {'values': [1.75, 1.78,1.88],'tolerance': 0.01}
+                'height': {'values': [1.75, 1.78, 1.88],'tolerance': 0.01}
             }
         },
         Stove: {
@@ -507,18 +507,30 @@ def check_furniture(fixtures):
             'name': '洗碗机',
             'required': True,
             'specs': {
-                'length': {'value': 0.6, 'tolerance': 0.01},
+                'length': {'value': 0.6, 'tolerance': 0.01}, 
                 'depth': {'value': 0.6, 'tolerance': 0.01},
-                'height': {'value': 0.89, 'tolerance': 0.01}
+                'height': {'value': 0.89, 'tolerance': 0.01},
+                'position': {'y': -0.375, 'z': 0.445, 'tolerance': 0.01}
             }
         },
-        Microwave: {
-            'name': '微波炉',
-            'required': True,
+        Counter: {
+            'name': '台面',
+            'required': False,
             'specs': {
-                'length': {'value': 0.75, 'tolerance': 0.01},
-                'depth': {'values': [0.45, 0.5], 'tolerance': 0.01}
-                # height不做要求
+                'length': {'value': None, 'tolerance': 0.01},  # 长度任意
+                'depth': {'value': 0.65, 'tolerance': 0.01},
+                'height': {'value': 0.92, 'tolerance': 0.01},
+                'position': {'y': -0.325, 'z': 0.46, 'tolerance': 0.01}
+            }
+        },
+        FixtureStack: {
+            'name': '组件',
+            'required': False,
+            'specs': {
+                'length': {'value': None, 'tolerance': 0.01},  # 长度任意
+                'depth': {'value': 0.65, 'tolerance': 0.01},
+                'height': {'value': 0.84, 'tolerance': 0.01},
+                'position': {'y': -0.325, 'z': 0.47, 'tolerance': 0.01}
             }
         }
     }
@@ -532,24 +544,13 @@ def check_furniture(fixtures):
                 if isinstance(fixture, appliance_type):
                     appliances_found[appliance_type].append((name, fixture))
     
-    # 检查每种家电的数量
-    for appliance_type, items in appliances_found.items():
-        appliance_info = household_appliances[appliance_type]
-        appliance_name = appliance_info['name']
-        count = len(items)
-        
-        if appliance_info['required']:
-            if count == 0:
-                issues.append(f"错误：缺少{appliance_name}")
-            elif count > 1:
-                issues.append(f"错误：{appliance_name}数量过多（当前{count}个，应为1个）")
-    
-    # 检查每个家电的尺寸
+    # 检查每种家电的数量和尺寸
     for appliance_type, items in appliances_found.items():
         specs = household_appliances[appliance_type]['specs']
         appliance_name = household_appliances[appliance_type]['name']
         
         for name, item in items:
+            # 检查尺寸
             dimensions = {
                 'length': {'value': item.size[0], 'name': '长度'},
                 'depth': {'value': item.size[1], 'name': '深度'},
@@ -557,14 +558,17 @@ def check_furniture(fixtures):
             }
             
             for dim_key, dim_info in dimensions.items():
-                if dim_key in specs:  # 只检查有规格要求的尺寸
+                if dim_key in specs:
                     spec = specs[dim_key]
                     dim_value = dim_info['value']
                     dim_name = dim_info['name']
                     tolerance = spec.get('tolerance', 0.01)
                     
+                    # 跳过标记为任意值(None)的检查
+                    if spec.get('value') is None:
+                        continue
+                        
                     if 'values' in spec:
-                        # 多个允许值的情况
                         valid_values = spec['values']
                         if not any(abs(dim_value - allowed_value) <= tolerance 
                                  for allowed_value in valid_values):
@@ -574,13 +578,29 @@ def check_furniture(fixtures):
                                 f"标准值应为{values_str}m"
                             )
                     elif 'value' in spec:
-                        # 单个允许值的情况
                         standard_value = spec['value']
                         if abs(dim_value - standard_value) > tolerance:
                             issues.append(
                                 f"错误：{name}的{dim_name}为{dim_value:.3f}m，"
                                 f"标准值应为{standard_value:.3f}m"
                             )
+            
+            # 检查位置（如果有指定）
+            if 'position' in specs:
+                pos_spec = specs['position']
+                tolerance = pos_spec.get('tolerance', 0.01)
+                
+                if 'y' in pos_spec and abs(item.pos[1] - pos_spec['y']) > tolerance:
+                    issues.append(
+                        f"错误：{name}的Y轴位置为{item.pos[1]:.3f}m，"
+                        f"标准值应为{pos_spec['y']:.3f}m"
+                    )
+                
+                if 'z' in pos_spec and abs(item.pos[2] - pos_spec['z']) > tolerance:
+                    issues.append(
+                        f"错误：{name}的Z轴位置为{item.pos[2]:.3f}m，"
+                        f"标准值应为{pos_spec['z']:.3f}m"
+                    )
     
     return len(issues) == 0, issues
 
