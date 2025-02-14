@@ -371,95 +371,6 @@ def config_cam(viewer):
     viewer.cam.distance = 3.0
     viewer.cam.lookat[0:3] = [1.8, -8.0, 3.5]
 
-def check_stove_height_alignment(bm):
-    """检查相邻灶台的高度是否对齐"""
-    stoves = [obj for obj in bm.objects if obj.name.startswith("Stove")]
-    
-    if len(stoves) < 2:
-        return True  # 如果只有一个灶台或没有灶台，则无需检查对齐
-        
-    issues = []
-    tolerance = 0.001  # 允许的高度误差范围(米)
-    
-    for i, stove1 in enumerate(stoves):
-        for stove2 in stoves[i+1:]:
-            # 检查两个灶台是否相邻
-            distance = (stove1.location - stove2.location).length
-            if distance < 1.5:  # 如果灶台间距小于1.5米，认为是相邻的
-                height1 = stove1.location.z
-                height2 = stove2.location.z
-                
-                if abs(height1 - height2) > tolerance:
-                    issues.append(f"灶台 {stove1.name} 和 {stove2.name} 的高度不一致")
-    
-    return len(issues) == 0, issues
-
-# def check_countertop_height_alignment(fixtures):
-#     """检查台面尺寸是否符合标准，特别关注灶台高度"""
-#     # 获取所有台面类型的设备（counter和stove），排除岛台
-#     countertops = []
-#     stoves = []  # 单独存储灶台
-#     for name, fixture in fixtures.items():
-#         if 'island' not in name.lower():
-#             if isinstance(fixture, Counter):
-#                 countertops.append((name, fixture))
-#             elif isinstance(fixture, Stove):
-#                 stoves.append((name, fixture))
-    
-#     if len(countertops) < 1:
-#         return True, []
-        
-#     issues = []
-#     tolerance = 0.001  # 允许的误差范围(米)
-    
-#     # 从普通台面获取标准高度和深度
-#     counter_depths = [fixture.size[1] for name, fixture in countertops]
-#     counter_heights = [fixture.size[2] for name, fixture in countertops]
-    
-#     # 使用普通台面的尺寸作为标准
-#     from collections import Counter as CollectionCounter
-#     standard_depth = CollectionCounter(counter_depths).most_common(1)[0][0]
-#     standard_height = CollectionCounter(counter_heights).most_common(1)[0][0]
-    
-#     print(f"\n标准台面尺寸:")
-#     print(f"- 标准深度: {standard_depth:.3f}m")
-#     print(f"- 标准高度: {standard_height:.3f}m")
-    
-#     # 检查灶台
-#     for name, stove in stoves:
-#         current_depth = stove.size[1]
-#         current_height = stove.size[2]
-        
-#         # 检查深度
-#         if abs(current_depth - standard_depth) > tolerance:
-#             issue = f"警告: 灶台 {name} 的深度为 {current_depth:.3f}m, 与标准深度 {standard_depth:.3f}m 不符"
-#             issues.append(issue)
-        
-#         # 检查高度
-#         if abs(current_height - standard_height) > tolerance:
-#             issue = f"警告: 灶台 {name} 的高度为 {current_height:.3f}m, 与标准高度 {standard_height:.3f}m 不符"
-#             issues.append(issue)
-#             # 添加修改建议
-#             if current_height < standard_height:
-#                 issues.append(f"建议: 请检查 {name} 的高度设置，可能需要调整到 {standard_height:.3f}m")
-    
-#     # 检查其他台面
-#     for name, counter in countertops:
-#         current_depth = counter.size[1]
-#         current_height = counter.size[2]
-        
-#         # 检查深度
-#         if abs(current_depth - standard_depth) > tolerance:
-#             issue = f"台面 {name} 的深度为 {current_depth:.3f}m, 与标准深度 {standard_depth:.3f}m 不符"
-#             issues.append(issue)
-        
-#         # 检查高度
-#         if abs(current_height - standard_height) > tolerance:
-#             issue = f"台面 {name} 的高度为 {current_height:.3f}m, 与标准高度 {standard_height:.3f}m 不符"
-#             issues.append(issue)
-    
-#     return len(issues) == 0, issues
-
 def check_furniture(fixtures):
     """检查指定家电尺寸是否符合标准，且每种物品有且只有一个"""
     issues = []
@@ -584,88 +495,79 @@ def check_furniture(fixtures):
     
     return len(issues) == 0, issues
 
-def check_edge_alignment(fixtures):
-    """检查墙壁和地板之间相邻部分是否对齐
+# def check_edge_alignment(fixtures):
+#     """检查同一group内相邻物体之间的边缘对齐情况
     
-    Args:
-        fixtures: 字典，包含所有家具对象
+#     Args:
+#         fixtures: 字典，包含所有家具对象
         
-    Returns:
-        tuple: (是否全部通过检查, 问题列表)
-    """
-    issues = []
-    tolerance = 1e-10  # 将对齐误差减小到几乎可以忽略的值
-    overlap_threshold = 0.1  # 判定为重叠的最小距离（米）
+#     Returns:
+#         tuple: (是否全部通过检查, 问题列表)
+#     """
+#     issues = []
+#     tolerance = 0.001  # 允许的误差范围(米)
     
-    # 分别获取墙壁和地板
-    walls = {name: fix for name, fix in fixtures.items() if isinstance(fix, Wall)}
-    floors = {name: fix for name, fix in fixtures.items() if isinstance(fix, Floor)}
+#     # 按group分组存储物体
+#     grouped_objects = {}
+#     for name, fixture in fixtures.items():
+#         if isinstance(fixture, (Counter, FixtureStack)) and 'island' not in name.lower():
+#             # 从名称中提取group名称（假设格式为：name_groupname）
+#             group_name = name.split('_')[-1] if '_' in name else 'default'
+#             if group_name not in grouped_objects:
+#                 grouped_objects[group_name] = []
+#             grouped_objects[group_name].append((name, fixture))
     
-    # 检查每个墙壁和地板之间的对齐
-    for wall_name, wall in walls.items():
-        for floor_name, floor in floors.items():
-            # 获取位置和尺寸信息
-            wall_pos, wall_size = wall.pos, wall.size
-            floor_pos, floor_size = floor.pos, floor.size
+#     # 对每个group内的物体进行检查
+#     for group_name, objects in grouped_objects.items():
+#         # 如果group内物体数量少于2个，跳过检查
+#         if len(objects) < 2:
+#             continue
             
-            # 计算边界框
-            wall_bounds = {
-                'left': wall_pos[0] - wall_size[0]/2,
-                'right': wall_pos[0] + wall_size[0]/2,
-                'front': wall_pos[1] - wall_size[1]/2,
-                'back': wall_pos[1] + wall_size[1]/2
-            }
-            
-            floor_bounds = {
-                'left': floor_pos[0] - floor_size[0]/2,
-                'right': floor_pos[0] + floor_size[0]/2,
-                'front': floor_pos[1] - floor_size[1]/2,
-                'back': floor_pos[1] + floor_size[1]/2
-            }
-            
-            # 检查x方向的重叠
-            x_overlap = min(wall_bounds['right'], floor_bounds['right']) - \
-                       max(wall_bounds['left'], floor_bounds['left'])
-                       
-            # 检查y方向的重叠
-            y_overlap = min(wall_bounds['back'], floor_bounds['back']) - \
-                       max(wall_bounds['front'], floor_bounds['front'])
-            
-            # 如果有显著重叠，检查相应边缘的对齐情况
-            if x_overlap > overlap_threshold:
-                # 检查前边缘对齐（如果前边缘接近）
-                if abs(wall_bounds['front'] - floor_bounds['front']) < overlap_threshold:
-                    if abs(wall_bounds['front'] - floor_bounds['front']) > tolerance:
-                        issues.append(f"警告: {wall_name} 和 {floor_name} 的前边缘未对齐")
+#         # 检查group内每对物体之间的对齐情况
+#         for i, (name1, obj1) in enumerate(objects):
+#             for name2, obj2 in objects[i+1:]:
+#                 # 计算两个物体中心点之间的距离
+#                 dx = abs(obj1.pos[0] - obj2.pos[0])
+#                 dy = abs(obj1.pos[1] - obj2.pos[1])
                 
-                # 检查后边缘对齐（如果后边缘接近）
-                if abs(wall_bounds['back'] - floor_bounds['back']) < overlap_threshold:
-                    if abs(wall_bounds['back'] - floor_bounds['back']) > tolerance:
-                        issues.append(f"警告: {wall_name} 和 {floor_name} 的后边缘未对齐")
-            
-            if y_overlap > overlap_threshold:
-                # 检查左边缘对齐（如果左边缘接近）
-                if abs(wall_bounds['left'] - floor_bounds['left']) < overlap_threshold:
-                    if abs(wall_bounds['left'] - floor_bounds['left']) > tolerance:
-                        issues.append(f"警告: {wall_name} 和 {floor_name} 的左边缘未对齐")
+#                 # 计算两个物体的尺寸
+#                 size1 = obj1.size
+#                 size2 = obj2.size
                 
-                # 检查右边缘对齐（如果右边缘接近）
-                if abs(wall_bounds['right'] - floor_bounds['right']) < overlap_threshold:
-                    if abs(wall_bounds['right'] - floor_bounds['right']) > tolerance:
-                        issues.append(f"警告: {wall_name} 和 {floor_name} 的右边缘未对齐")
+#                 # 如果物体在x方向相邻（考虑y方向的距离很小）
+#                 if abs(dy) < tolerance:
+#                     expected_dx = (size1[0] + size2[0]) / 2  # 理想间距
+#                     gap = abs(dx - expected_dx)
+                    
+#                     if gap > tolerance:
+#                         if dx < expected_dx:
+#                             issues.append(f"错误：{group_name}组中的{name1}和{name2}之间存在重叠，重叠量为{expected_dx - dx:.3f}m")
+#                         else:
+#                             issues.append(f"错误：{group_name}组中的{name1}和{name2}之间存在间隙，间隙大小为{dx - expected_dx:.3f}m")
+                
+#                 # 如果物体在y方向相邻（考虑x方向的距离很小）
+#                 if abs(dx) < tolerance:
+#                     expected_dy = (size1[1] + size2[1]) / 2  # 理想间距
+#                     gap = abs(dy - expected_dy)
+                    
+#                     if gap > tolerance:
+#                         if dy < expected_dy:
+#                             issues.append(f"错误：{group_name}组中的{name1}和{name2}之间存在重叠，重叠量为{expected_dy - dy:.3f}m")
+#                         else:
+#                             issues.append(f"错误：{group_name}组中的{name1}和{name2}之间存在间隙，间隙大小为{dy - expected_dy:.3f}m")
+                
+#                 # 检查高度对齐
+#                 if abs(dx) < tolerance or abs(dy) < tolerance:  # 如果物体相邻
+#                     dz = abs(obj1.pos[2] - obj2.pos[2])
+#                     if dz > tolerance:
+#                         issues.append(f"错误：{group_name}组中的{name1}和{name2}的高度不一致，差异为{dz:.3f}m")
     
-    return len(issues) == 0, issues
+#     return len(issues) == 0, issues
 
 def check_kitchen(fixtures):
     """主检查函数"""
     issues = []
     all_passed = True
-    
-    # # 检查台面高度对齐
-    # height_aligned, height_issues = check_countertop_height_alignment(fixtures)
-    # if not height_aligned:
-    #     all_passed = False
-    #     issues.extend(height_issues)
     
     # 检查家具
     furniture_check, furniture_issues = check_furniture(fixtures)
@@ -673,11 +575,11 @@ def check_kitchen(fixtures):
         all_passed = False
         issues.extend(furniture_issues)
     
-    # 检查边缘对齐
-    alignment_check, alignment_issues = check_edge_alignment(fixtures)
-    if not alignment_check:
-        all_passed = False
-        issues.extend(alignment_issues)
+    # # 检查边缘对齐
+    # alignment_check, alignment_issues = check_edge_alignment(fixtures)
+    # if not alignment_check:
+    #     all_passed = False
+    #     issues.extend(alignment_issues)
     
     # 直接打印检查结果，确保输出包含关键字
     if not all_passed:

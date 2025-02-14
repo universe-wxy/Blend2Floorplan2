@@ -129,7 +129,7 @@ def process_cab_corner(value, key, group_pos, group_z_rot):
     size = value.get('size')
 
     cab_corner_info = {
-        'name': f"{key}_cab_corner",
+        'name': key,
         'type': 'box',
         'size': size,
         'pos': pos
@@ -150,7 +150,7 @@ def process_panel_box(value, key, group_pos, group_z_rot):
     size = value.get('size')
 
     panel_box_info = {
-        'name': f"{key}_panel_box",
+        'name': key,
         'type': 'stack',
         'size': size,
         'pos': pos,
