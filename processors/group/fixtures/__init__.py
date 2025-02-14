@@ -17,6 +17,7 @@ from .window import process_framed_window
 from .sink import process_sink
 from .stool import process_stool
 from .stove import process_stove
+from .counter_accessories import process_counter_accessories
 from .custom import (
     process_qianrugui, 
     process_pillar, 
@@ -49,7 +50,8 @@ __all__ = [
     'process_stool',
     'process_stove',
     'process_panel_box',
-    'process_box'
+    'process_box',
+    'process_counter_accessories'
 ]
 
 
